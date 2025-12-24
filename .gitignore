@@ -1,0 +1,64 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build outputs
+**/bin/
+**/obj/
+
+# Runtime artifacts
+*.dll
+*.exe
+*.pdb
+*.deps.json
+*.runtimeconfig.json
+apphost.exe
+staticwebassets.*
+
+# NuGet / MSBuild caches
+packages/
+project.assets.json
+project.nuget.cache
+*.nuget.g.props
+*.nuget.g.targets
+*.cache
+
+# Logs and temp files
+*.log
+*.tmp
+build_*.txt
+build_error*.txt
+build_errors*.txt
+api_build.txt
+api_errors.txt
+detailed_errors.log
+
+# IDE files
+.vscode/
+*.code-workspace
+
+# Agent / workflow helpers
+.agent/
+
+# Copilot / VS snapshot data
+.vs/CopilotSnapshots/
+.vs/CopilotIndices/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log
+*.cache
