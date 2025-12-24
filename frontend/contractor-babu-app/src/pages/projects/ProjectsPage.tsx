@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react"
 import { Link, useSearchParams } from "react-router-dom"
-import { Plus, Search, Edit, Trash2, FolderKanban, Calendar, DollarSign, Grid3x3, List, Loader2, FileText } from "lucide-react"
+import { Plus, Search, Edit, Trash2, FolderKanban, Calendar, DollarSign, Grid3x3, List, Loader2, FileText, MoreVertical } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectItem } from "@/components/ui/select"
+import { DropdownMenu, DropdownTrigger, DropdownContent, DropdownItem } from "@/components/ui/dropdown"
 import { siteService } from '@/services/siteService'
 import { projectService } from "@/services/projectService"
 import { clientService } from "@/services/clientService"
@@ -23,6 +24,7 @@ export default function ProjectsPage() {
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState("")
     const [viewMode, setViewMode] = useState<'card' | 'table'>('card')
+    const [openActionMenu, setOpenActionMenu] = useState<string | null>(null)
 
     // Dialog State
     const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -276,22 +278,21 @@ export default function ProjectsPage() {
                                         <p className="text-sm text-gray-500">{project.clientName || 'Unknown Client'}</p>
                                     </div>
                                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Button
-                                            variant="ghostPrimary"
-                                            size="icon"
-                                            onClick={() => handleOpenDialog(project)}
-                                            className="h-8 w-8"
-                                        >
-                                            <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghostDestructive"
-                                            size="icon"
-                                            onClick={() => handleDelete(project.id)}
-                                            className="h-8 w-8"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                        <DropdownMenu>
+                                            <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === project.id ? null : project.id)} data-dropdown-trigger>
+                                                <Button variant="ghostPrimary" size="icon" className="h-8 w-8">
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownTrigger>
+                                            <DropdownContent open={openActionMenu === project.id} onClose={() => setOpenActionMenu(null)}>
+                                                <DropdownItem onClick={() => { handleOpenDialog(project); setOpenActionMenu(null); }} icon={Edit}>
+                                                    Edit
+                                                </DropdownItem>
+                                                <DropdownItem onClick={() => { handleDelete(project.id); setOpenActionMenu(null); }} icon={Trash2} className="text-red-600 hover:bg-red-50">
+                                                    Delete
+                                                </DropdownItem>
+                                            </DropdownContent>
+                                        </DropdownMenu>
                                     </div>
                                 </div>
 
@@ -395,22 +396,21 @@ export default function ProjectsPage() {
                                             </Link>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <div className="flex justify-end gap-2">
-                                                <Button
-                                                    variant="ghostPrimary"
-                                                    size="sm"
-                                                    onClick={() => handleOpenDialog(project)}
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghostDestructive"
-                                                    size="sm"
-                                                    onClick={() => handleDelete(project.id)}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
+                                            <DropdownMenu>
+                                                <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === project.id ? null : project.id)} data-dropdown-trigger>
+                                                    <Button variant="ghostPrimary" size="icon" className="h-8 w-8">
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownTrigger>
+                                                <DropdownContent open={openActionMenu === project.id} onClose={() => setOpenActionMenu(null)} align="right">
+                                                    <DropdownItem onClick={() => { handleOpenDialog(project); setOpenActionMenu(null); }} icon={Edit}>
+                                                        Edit
+                                                    </DropdownItem>
+                                                    <DropdownItem onClick={() => { handleDelete(project.id); setOpenActionMenu(null); }} icon={Trash2} className="text-red-600 hover:bg-red-50">
+                                                        Delete
+                                                    </DropdownItem>
+                                                </DropdownContent>
+                                            </DropdownMenu>
                                         </td>
                                     </tr>
                                 ))}
@@ -423,7 +423,7 @@ export default function ProjectsPage() {
 
             {/* Create/Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+                <DialogContent className="w-full sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-xl font-bold">{editingProject ? 'Edit Project' : 'Create New Project'}</DialogTitle>
                     </DialogHeader>

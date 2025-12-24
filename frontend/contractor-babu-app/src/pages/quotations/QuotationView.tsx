@@ -52,17 +52,29 @@ export default function QuotationView() {
                         <ArrowLeft className="mr-2 h-4 w-4" /> Back
                     </Button>
                     <Button variant="outline" size="sm" onClick={async () => {
-                        // generate PDF by capturing the rendered view
+                        // generate PDF by capturing the rendered view with fixed desktop width
                         try {
                             const el = document.getElementById('quotation-pdf-root');
                             if (!el) throw new Error('Quotation root not found');
+
+                            // Create a container with fixed desktop width (A4 width approximation)
+                            const container = document.createElement('div');
+                            container.style.position = 'fixed';
+                            container.style.left = '-9999px';
+                            container.style.top = '0';
+                            container.style.width = '900px'; // Full content width to ensure no wrapping
+                            container.style.backgroundColor = 'white';
+                            container.style.padding = '20px';
+                            container.style.boxSizing = 'border-box';
+                            container.innerHTML = el.innerHTML;
+                            document.body.appendChild(container);
 
                             const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
                                 import('html2canvas'),
                                 import('jspdf')
                             ]);
 
-                            const canvas = await html2canvas(el as HTMLElement, { scale: 2, useCORS: true });
+                            const canvas = await html2canvas(container as HTMLElement, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
                             const imgData = canvas.toDataURL('image/png');
 
                             const pdf = new jsPDF('p', 'pt', 'a4');
@@ -84,27 +96,39 @@ export default function QuotationView() {
                             }
 
                             pdf.save(`${quotation.quotationNumber || 'quotation'}.pdf`);
+                            document.body.removeChild(container);
                         } catch (err) {
                             console.error('PDF generation failed', err);
-                            // fallback: open printable HTML in new tab
+                            // fallback: open printable HTML in new tab with full desktop layout
                             try {
                                 const itemsHtml = quotation.items.map((it: any, idx: number) => `
                                     <tr>
-                                        <td style="padding:8px;border:1px solid #ddd">${idx + 1}</td>
+                                        <td style="padding:8px;border:1px solid #ddd;text-align:center">${idx + 1}</td>
                                         <td style="padding:8px;border:1px solid #ddd">${it.description || ''}</td>
                                         <td style="padding:8px;border:1px solid #ddd">${(it.length ?? '-') + ' × ' + (it.width ?? '-') + ' × ' + (it.height ?? '-')}</td>
-                                        <td style="padding:8px;border:1px solid #ddd;text-align:right">${it.quantity ?? ''}</td>
+                                        <td style="padding:8px;border:1px solid #ddd;text-align:center">${it.isWithMaterial ? 'Yes' : 'No'}</td>
+                                        <td style="padding:8px;border:1px solid #ddd;text-align:center">${it.area ?? '-'}</td>
+                                        <td style="padding:8px;border:1px solid #ddd;text-align:center">${it.quantity ?? ''}</td>
+                                        <td style="padding:8px;border:1px solid #ddd;text-align:center">${it.unit ?? ''}</td>
                                         <td style="padding:8px;border:1px solid #ddd;text-align:right">${it.rate?.toLocaleString?.() ?? it.rate ?? ''}</td>
                                         <td style="padding:8px;border:1px solid #ddd;text-align:right">${(it.amount ?? 0).toLocaleString()}</td>
                                     </tr>
                                 `).join('');
 
-                                const total = calculateTotal(quotation.items || []);
-                                const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1" /><title>Quotation - ${quotation.quotationNumber}</title></head><body><div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; padding:20px; color:#111">` +
-                                    `<h1>Quotation: ${quotation.quotationNumber}</h1><div>${quotation.projectName ?? ''}</div><div>${new Date(quotation.quotationDate).toLocaleDateString()}</div>` +
-                                    `<table style="border-collapse:collapse;width:100%;margin-top:12px"><thead><tr><th style="padding:8px;border:1px solid #ddd">#</th><th style="padding:8px;border:1px solid #ddd">Description</th><th style="padding:8px;border:1px solid #ddd">Qty</th><th style="padding:8px;border:1px solid #ddd">Rate</th><th style="padding:8px;border:1px solid #ddd">Amount</th></tr></thead><tbody>` +
+                                const taxAmount = (total * (quotation.taxPercentage || 0)) / 100;
+                                const discountAmount = (total * (quotation.discountPercentage || 0)) / 100;
+                                const grandTotal = total + taxAmount - discountAmount;
+
+                                const html = `<!doctype html><html><head><meta charset="utf-8"><title>Quotation - ${quotation.quotationNumber}</title><style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin: 0; padding: 20px; color: #111; } table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid #ddd; padding: 8px; } th { background: #f5f5f5; font-weight: bold; } td { text-align: left; } td.right { text-align: right; } .totals { margin-top: 20px; margin-left: auto; max-width: 400px; } .total-row { display: flex; justify-content: space-between; padding: 8px 0; } .total-row.grand { border-top: 2px solid #111; font-weight: bold; font-size: 16px; }</style></head><body>` +
+                                    `<div style="display: flex; justify-content: space-between; margin-bottom: 20px;"><div><div style="font-size: 20px; font-weight: bold;">ConstructPro Inc.</div><div style="font-size: 12px; color: #666;">123 Construction Ave, Metropolis</div></div><div style="text-align: right;"><div style="font-size: 20px; font-weight: bold;">Quotation</div><div style="font-size: 12px; margin-top: 4px;">#${quotation.quotationNumber}</div></div></div>` +
+                                    `<hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">` +
+                                    `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;"><div><div style="font-weight: bold; margin-bottom: 8px;">Quote to</div><div style="font-size: 14px; font-weight: bold;">${quotation.clientName || '-'}</div><div style="font-size: 12px; color: #666; margin-top: 4px;">${quotation.clientAddress || ''}</div><div style="font-size: 12px; color: #666;">${quotation.clientEmail || ''}</div><div style="font-size: 12px; color: #666;">${quotation.clientPhone || ''}</div></div><div style="text-align: right;"><div style="font-weight: bold; margin-bottom: 8px;">Details</div><div style="font-size: 12px; color: #666;">Date: <span style="font-weight: bold;">${new Date(quotation.quotationDate).toLocaleDateString()}</span></div><div style="margin-top: 8px; font-size: 12px; color: #666;">Status: <span style="padding: 2px 8px; border-radius: 4px; background: ${quotation.status?.toLowerCase() === 'approved' ? '#dcfce7' : '#f3f4f6'}; color: ${quotation.status?.toLowerCase() === 'approved' ? '#15803d' : '#374151'};">${quotation.status || '—'}</span></div><div style="margin-top: 8px; font-size: 12px; color: #666;">Project: <span style="font-weight: bold;">${quotation.projectName || '-'}</span></div></div></div>` +
+                                    `<table style="margin-top: 20px;"><thead><tr><th style="width: 40px; text-align: center;">#</th><th>Description</th><th>Dimensions</th><th style="text-align: center;">Incl. Material</th><th style="text-align: center;">Area</th><th style="text-align: center;">Qty</th><th style="text-align: center;">Unit</th><th style="text-align: right; width: 100px;">Rate</th><th style="text-align: right; width: 120px;">Amount</th></tr></thead><tbody>` +
                                     itemsHtml +
-                                    `</tbody></table><div style="text-align:right;margin-top:12px">Sub Total: ₹${total.toLocaleString()}</div></div></body></html>`;
+                                    `</tbody></table>` +
+                                    `<div class="totals"><div class="total-row"><span>Subtotal</span><span>₹${total.toLocaleString()}</span></div><div class="total-row"><span>Tax (${quotation.taxPercentage || 0}%)</span><span>₹${taxAmount.toFixed(2)}</span></div><div class="total-row"><span>Discount (${quotation.discountPercentage || 0}%)</span><span style="color: #dc2626;">- ₹${discountAmount.toFixed(2)}</span></div><div class="total-row grand"><span>Grand Total</span><span>₹${grandTotal.toLocaleString()}</span></div></div>` +
+                                    `<div style="margin-top: 20px; font-size: 12px; color: #666;"><div style="font-weight: bold; font-size: 10px; margin-bottom: 8px; text-transform: uppercase;">Notes</div><div>${quotation.remarks || 'This quotation is valid for 30 days.'}</div></div>` +
+                                    `</body></html>`;
 
                                 const w = window.open('', '_blank', 'noopener,noreferrer');
                                 if (w) {
@@ -132,13 +156,13 @@ export default function QuotationView() {
                     {/* Header: company left, QUOTATION title right */}
                     <div className="flex items-start justify-between pt-3">
                         <div>
-                            <div className="text-2xl font-semibold text-muted-foreground">ConstructPro Inc.</div>
+                            <div className="text-2xl font-semibold">ConstructPro Inc.</div>
                             <div className="text-sm text-gray-500">123 Construction Ave, Metropolis</div>
                         </div>
 
                         <div className="text-right">
-                            <div className="text-2xl tracking-wider font-semibold text-muted-foreground">Quotation</div>
-                            <div className="text-sm text-gray-500 mt-1">#{quotation.quotationNumber}</div>
+                            <div className="text-2xl tracking-wider font-semibold">Quotation</div>
+                            <div className="text-sm font-semibold mt-1">#{quotation.quotationNumber}</div>
                         </div>
                     </div>
 
@@ -147,7 +171,7 @@ export default function QuotationView() {
                     {/* Billed to (left) and Details (right) */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <div className="text-xs text-gray-600 font-bold uppercase mb-2">Quote to</div>
+                            <div className="text-m font-semibold mb-2 text-muted-foreground">Quote to</div>
                             <div className="font-semibold text-lg">{quotation.clientName || '-'}</div>
                             {quotation.clientAddress && <div className="text-sm text-gray-600 mt-1">{quotation.clientAddress}</div>}
                             {quotation.clientEmail && <div className="text-sm text-gray-600 mt-1">{quotation.clientEmail}</div>}
@@ -155,7 +179,7 @@ export default function QuotationView() {
                         </div>
 
                         <div className="text-right">
-                            <div className="text-xs text-gray-600 font-bold uppercase mb-2">Details</div>
+                            <div className="text-m font-semibold mb-2 text-muted-foreground">Details</div>
                             <div className="text-sm text-gray-500">Date: <span className="font-medium">{new Date(quotation.quotationDate).toLocaleDateString()}</span></div>
                             <div className="mt-2 text-sm text-gray-500">Status: <span className={`inline-block px-2 py-0.5 rounded-full text-sm ${quotation.status?.toLowerCase() === 'approved' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{quotation.status || '—'}</span></div>
                             <div className="mt-2 text-sm text-gray-500">Project: <span className="font-medium">{quotation.projectName || '-'}</span></div>
@@ -163,7 +187,7 @@ export default function QuotationView() {
                     </div>
 
                     <div className="overflow-x-auto mt-6">
-                        <table className="w-full text-sm">
+                        <table className="w-full text-sm ">
                             <thead>
                                 <tr className="text-left text-xs text-gray-500 border-b">
                                     <th className="py-3 w-[40px]">#</th>
@@ -212,8 +236,8 @@ export default function QuotationView() {
                                     <div className="text-red-600">- ₹{((total * (quotation.discountPercentage || 0)) / 100).toFixed(2)}</div>
                                 </div>
                                 <div className="flex justify-between py-4 text-lg font-bold border-t mt-2">
-                                    <div>Grand Total</div>
-                                    <div>₹{(total + (total * (quotation.taxPercentage || 0)) / 100 - (total * (quotation.discountPercentage || 0)) / 100).toLocaleString()}</div>
+                                    <div className="text-m font-semibold mb-2">Grand Total</div>
+                                    <div className="text-m font-semibold mb-2">₹{(total + (total * (quotation.taxPercentage || 0)) / 100 - (total * (quotation.discountPercentage || 0)) / 100).toLocaleString()}</div>
                                 </div>
                             </div>
                         </div>

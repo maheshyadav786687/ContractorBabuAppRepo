@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { Plus, Search, Edit, Trash2, Mail, Phone, MapPin, Loader2, RefreshCw, LogOut, AlertCircle, Grid3x3, List, Users, Building2 } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Mail, Phone, MapPin, Loader2, RefreshCw, LogOut, AlertCircle, Grid3x3, List, Users, Building2, MoreVertical } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { DropdownMenu, DropdownTrigger, DropdownContent, DropdownItem } from "@/components/ui/dropdown"
 import { clientService } from "@/services/clientService"
 import { siteService } from "@/services/siteService"
 import { authService } from "@/services/authService"
@@ -19,6 +20,7 @@ export default function ClientsPage() {
     const [error, setError] = useState<string | null>(null)
     const [searchTerm, setSearchTerm] = useState("")
     const [viewMode, setViewMode] = useState<'card' | 'table'>('card')
+    const [openActionMenu, setOpenActionMenu] = useState<string | null>(null)
 
     // Dialog State
     const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -237,22 +239,21 @@ export default function ClientsPage() {
                                         {client.name.charAt(0).toUpperCase()}
                                     </div>
                                     <div className="flex gap-1">
-                                        <Button
-                                            variant="ghostPrimary"
-                                            size="icon"
-                                            onClick={() => handleOpenDialog(client)}
-                                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        >
-                                            <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghostDestructive"
-                                            size="icon"
-                                            onClick={() => handleDelete(client.id)}
-                                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                        <DropdownMenu>
+                                            <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === client.id ? null : client.id)} data-dropdown-trigger>
+                                                <Button variant="ghostPrimary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownTrigger>
+                                            <DropdownContent open={openActionMenu === client.id} onClose={() => setOpenActionMenu(null)}>
+                                                <DropdownItem onClick={() => { handleOpenDialog(client); setOpenActionMenu(null); }} icon={Edit}>
+                                                    Edit
+                                                </DropdownItem>
+                                                <DropdownItem onClick={() => { handleDelete(client.id); setOpenActionMenu(null); }} icon={Trash2} className="text-red-600 hover:bg-red-50">
+                                                    Delete
+                                                </DropdownItem>
+                                            </DropdownContent>
+                                        </DropdownMenu>
                                     </div>
                                 </div>
 
@@ -352,23 +353,21 @@ export default function ClientsPage() {
                                                         </div>
                                         </td>
                                             <td className="px-6 py-4 text-right">
-                                            <div className="flex justify-end gap-2">
-                                                <Button
-                                                    variant="ghostPrimary"
-                                                    size="sm"
-                                                    onClick={() => handleOpenDialog(client)}
-                                                    className="hover:bg-primary hover:text-white"
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghostDestructive"
-                                                    size="sm"
-                                                    onClick={() => handleDelete(client.id)}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
+                                            <DropdownMenu>
+                                                <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === client.id ? null : client.id)} data-dropdown-trigger>
+                                                    <Button variant="ghostPrimary" size="icon" className="h-8 w-8">
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownTrigger>
+                                                <DropdownContent open={openActionMenu === client.id} onClose={() => setOpenActionMenu(null)} align="right">
+                                                    <DropdownItem onClick={() => { handleOpenDialog(client); setOpenActionMenu(null); }} icon={Edit}>
+                                                        Edit
+                                                    </DropdownItem>
+                                                    <DropdownItem onClick={() => { handleDelete(client.id); setOpenActionMenu(null); }} icon={Trash2} className="text-red-600 hover:bg-red-50">
+                                                        Delete
+                                                    </DropdownItem>
+                                                </DropdownContent>
+                                            </DropdownMenu>
                                         </td>
                                     </tr>
                                 ))}
@@ -382,7 +381,7 @@ export default function ClientsPage() {
 
             {/* Add/Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-[1100px] max-h-[90vh] overflow-y-auto">
+                <DialogContent className="w-full sm:max-w-[1100px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-2xl font-bold">{editingClient ? "Edit Client" : "Add New Client"}</DialogTitle>
                     </DialogHeader>

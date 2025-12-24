@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react"
 import { Link, useSearchParams } from "react-router-dom"
-import { Plus, Search, Edit, Trash2, MapPin, Building2, Loader2, RefreshCw, LogOut, AlertCircle, Grid3x3, List, User } from "lucide-react"
+import { Plus, Search, Edit, Trash2, MapPin, Building2, Loader2, RefreshCw, LogOut, AlertCircle, Grid3x3, List, User, MoreVertical } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectItem } from "@/components/ui/select"
+import { DropdownMenu, DropdownTrigger, DropdownContent, DropdownItem } from "@/components/ui/dropdown"
 import { siteService } from "@/services/siteService"
 import { clientService } from "@/services/clientService"
 import { projectService } from '@/services/projectService'
@@ -25,6 +26,7 @@ export default function SitesPage() {
     const [error, setError] = useState<string | null>(null)
     const [searchTerm, setSearchTerm] = useState("")
     const [viewMode, setViewMode] = useState<'card' | 'table'>('card')
+    const [openActionMenu, setOpenActionMenu] = useState<string | null>(null)
 
     // Dialog State
     const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -278,22 +280,21 @@ export default function SitesPage() {
                                         {site.name.charAt(0).toUpperCase()}
                                     </div>
                                     <div className="flex gap-1">
-                                        <Button
-                                            variant="ghostPrimary"
-                                            size="icon"
-                                            onClick={() => handleOpenDialog(site)}
-                                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        >
-                                            <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghostDestructive"
-                                            size="icon"
-                                            onClick={() => handleDelete(site.id)}
-                                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                        <DropdownMenu>
+                                            <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === site.id ? null : site.id)} data-dropdown-trigger>
+                                                <Button variant="ghostPrimary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownTrigger>
+                                            <DropdownContent open={openActionMenu === site.id} onClose={() => setOpenActionMenu(null)}>
+                                                <DropdownItem onClick={() => { handleOpenDialog(site); setOpenActionMenu(null); }} icon={Edit}>
+                                                    Edit
+                                                </DropdownItem>
+                                                <DropdownItem onClick={() => { handleDelete(site.id); setOpenActionMenu(null); }} icon={Trash2} className="text-red-600 hover:bg-red-50">
+                                                    Delete
+                                                </DropdownItem>
+                                            </DropdownContent>
+                                        </DropdownMenu>
                                     </div>
                                 </div>
 
@@ -392,23 +393,21 @@ export default function SitesPage() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <div className="flex justify-end gap-2">
-                                                <Button
-                                                    variant="ghostPrimary"
-                                                    size="sm"
-                                                    onClick={() => handleOpenDialog(site)}
-                                                    className="hover:bg-primary hover:text-white"
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghostDestructive"
-                                                    size="sm"
-                                                    onClick={() => handleDelete(site.id)}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
+                                            <DropdownMenu>
+                                                <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === site.id ? null : site.id)} data-dropdown-trigger>
+                                                    <Button variant="ghostPrimary" size="icon" className="h-8 w-8">
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownTrigger>
+                                                <DropdownContent open={openActionMenu === site.id} onClose={() => setOpenActionMenu(null)} align="right">
+                                                    <DropdownItem onClick={() => { handleOpenDialog(site); setOpenActionMenu(null); }} icon={Edit}>
+                                                        Edit
+                                                    </DropdownItem>
+                                                    <DropdownItem onClick={() => { handleDelete(site.id); setOpenActionMenu(null); }} icon={Trash2} className="text-red-600 hover:bg-red-50">
+                                                        Delete
+                                                    </DropdownItem>
+                                                </DropdownContent>
+                                            </DropdownMenu>
                                         </td>
                                     </tr>
                                 ))}

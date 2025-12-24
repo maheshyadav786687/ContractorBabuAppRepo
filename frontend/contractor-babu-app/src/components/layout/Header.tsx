@@ -1,8 +1,8 @@
-import { Search, Moon, ChevronRight } from "lucide-react"
+import { Search, Moon, ChevronRight, Menu } from "lucide-react"
 import { authService } from "@/services/authService"
 import { useLocation } from "react-router-dom"
 
-export default function Header() {
+export default function Header({ onMobileToggle }: { onMobileToggle?: () => void }) {
     const user = authService.getCurrentUser()
     const location = useLocation()
 
@@ -13,12 +13,18 @@ export default function Header() {
         : 'Dashboard'
 
     return (
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
-            {/* Left: Breadcrumbs */}
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-                <span className="hover:text-gray-900 cursor-pointer">Home</span>
-                <ChevronRight className="h-4 w-4" />
-                <span className="font-medium text-gray-900">{currentPage}</span>
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6">
+            {/* Left: Breadcrumbs + mobile menu */}
+            <div className="flex items-center gap-3 text-sm text-gray-500">
+                {/* Mobile menu button */}
+                <button onClick={onMobileToggle} className="md:hidden p-2 rounded-md hover:bg-gray-100 text-gray-600">
+                    <Menu className="h-5 w-5" />
+                </button>
+                <div className="flex items-center gap-2">
+                    <span className="hover:text-gray-900 cursor-pointer">Home</span>
+                    <ChevronRight className="h-4 w-4" />
+                    <span className="font-medium text-gray-900">{currentPage}</span>
+                </div>
             </div>
 
             {/* Right: Search, Theme, Profile */}

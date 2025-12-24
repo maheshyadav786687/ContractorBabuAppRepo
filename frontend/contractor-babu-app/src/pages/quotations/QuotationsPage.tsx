@@ -14,7 +14,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectItem } from "@/components/ui/select";
-import { Plus, Search, Edit, Trash2, FileText, Calendar, DollarSign, Grid3x3, List, Loader2, Eye } from 'lucide-react';
+import { DropdownMenu, DropdownTrigger, DropdownContent, DropdownItem } from '@/components/ui/dropdown';
+import { Plus, Search, Edit, Trash2, FileText, Calendar, DollarSign, Grid3x3, List, Loader2, Eye, MoreVertical } from 'lucide-react';
 import QuotationItemsEditor from '@/components/quotations/QuotationItemsEditor';
 
 // PDF generation uses a printable HTML fallback when PDF libs are not installed.
@@ -25,6 +26,7 @@ export default function QuotationsPage() {
     const [sites, setSites] = useState<Site[]>([]);
     const [clients, setClients] = useState<any[]>([]);
     const [isSiteDropdownOpen, setIsSiteDropdownOpen] = useState(false);
+    const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
@@ -495,30 +497,24 @@ export default function QuotationsPage() {
                                             {quotation.status}
                                         </span>
                                     </div>
-                                    <div className="flex gap-1">
-                                        <Button variant="ghostPrimary" size="icon" className="h-8 w-8" onClick={() => handleDownloadPdf(quotation)}>
-                                            <FileText className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="ghostPrimary" size="icon" className="h-8 w-8" onClick={() => navigate(`/quotations/${quotation.id}`)}>
-                                            <Eye className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghostPrimary"
-                                            size="icon"
-                                            onClick={() => handleOpenDialog(quotation)}
-                                            className="h-8 w-8"
-                                        >
-                                            <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghostDestructive"
-                                            size="icon"
-                                            onClick={() => handleDelete(quotation.id)}
-                                            className="h-8 w-8"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
+                                    <DropdownMenu>
+                                        <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === quotation.id ? null : quotation.id)} data-dropdown-trigger>
+                                            <Button variant="ghostPrimary" size="icon" className="h-8 w-8">
+                                                <MoreVertical className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownTrigger>
+                                        <DropdownContent open={openActionMenu === quotation.id} onClose={() => setOpenActionMenu(null)}>
+                                            <DropdownItem onClick={() => { navigate(`/quotations/${quotation.id}`); setOpenActionMenu(null); }} icon={Eye}>
+                                                View
+                                            </DropdownItem>
+                                            <DropdownItem onClick={() => { handleOpenDialog(quotation); setOpenActionMenu(null); }} icon={Edit}>
+                                                Edit
+                                            </DropdownItem>
+                                            <DropdownItem onClick={() => { handleDelete(quotation.id); setOpenActionMenu(null); }} icon={Trash2} className="text-red-600 hover:bg-red-50">
+                                                Delete
+                                            </DropdownItem>
+                                        </DropdownContent>
+                                    </DropdownMenu>
                                 </div>
 
                                 <p className="text-sm text-gray-500 mb-2">{quotation.projectName}</p>
@@ -556,9 +552,9 @@ export default function QuotationsPage() {
             ) : (
                 /* Table View */
                 <Card>
-                    <div className="bg-transparent rounded-md border border-gray-200 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
+                    <div className="bg-transparent rounded-md border border-gray-200">
+                        <div>
+                            <table className="w-full">
                             <thead className="bg-gray-50 border-b">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quotation</th>
@@ -602,44 +598,37 @@ export default function QuotationsPage() {
                                             <div className="text-xs text-gray-500">{quotation.items.length} items</div>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <div className="flex justify-end gap-2">
-                                                <Button variant="ghostPrimary" size="icon" className="h-8 w-8" onClick={() => handleDownloadPdf(quotation)}>
-                                                    <FileText className="h-4 w-4" />
-                                                </Button>
-                                                <Button variant="ghostPrimary" size="icon" className="h-8 w-8" onClick={() => navigate(`/quotations/${quotation.id}`)}>
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghostPrimary"
-                                                    size="icon"
-                                                    className="h-8 w-8"
-                                                    onClick={() => handleOpenDialog(quotation)}
-                                                >
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghostDestructive"
-                                                    size="icon"
-                                                    className="h-8 w-8"
-                                                    onClick={() => handleDelete(quotation.id)}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
+                                            <DropdownMenu>
+                                                <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === quotation.id ? null : quotation.id)} data-dropdown-trigger>
+                                                    <Button variant="ghostPrimary" size="icon" className="h-8 w-8">
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownTrigger>
+                                                <DropdownContent open={openActionMenu === quotation.id} onClose={() => setOpenActionMenu(null)} align="right">
+                                                    <DropdownItem onClick={() => { navigate(`/quotations/${quotation.id}`); setOpenActionMenu(null); }} icon={Eye}>
+                                                        View
+                                                    </DropdownItem>
+                                                    <DropdownItem onClick={() => { handleOpenDialog(quotation); setOpenActionMenu(null); }} icon={Edit}>
+                                                        Edit
+                                                    </DropdownItem>
+                                                    <DropdownItem onClick={() => { handleDelete(quotation.id); setOpenActionMenu(null); }} icon={Trash2} className="text-red-600 hover:bg-red-50">
+                                                        Delete
+                                                    </DropdownItem>
+                                                </DropdownContent>
+                                            </DropdownMenu>
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
-                    </div>
-                    </div>
+                        </div>
+                        </div>
                 </Card>
-
             )}
 
             {/* Create/Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} className='p-0'>
-                <DialogContent className="sm:max-w-[1200px] h-[90vh] flex flex-col p-0 gap-0 overflow-hidden mt-0">
+                <DialogContent className="w-full sm:max-w-[1200px] h-[90vh] flex flex-col p-0 gap-0 overflow-hidden mt-0">
                     <DialogHeader className="p-6 pb-2 shrink-0">
                         <DialogTitle className="text-xl font-bold">{editingQuotation ? 'Edit Quotation' : 'Create Quotation'}</DialogTitle>
                         {editingQuotation && (
