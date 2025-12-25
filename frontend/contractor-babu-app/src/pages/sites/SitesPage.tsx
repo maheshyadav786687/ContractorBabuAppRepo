@@ -305,11 +305,11 @@ export default function SitesPage() {
                                 </div>
                                 <div className="flex items-center gap-3 text-sm text-gray-600 mb-2">
                                     <Link to={`/projects?siteId=${site.id}`} className="inline-flex items-center gap-2 hover:underline">
-                                        <span className="text-gray-500 text-xs">Projects</span>
+                                        <span className="text-gray-500 text-xs">Projects : </span>
                                         <span className="font-medium">{projects.filter(p => p.siteId === site.id).length}</span>
                                     </Link>
                                     <Link to={`/quotations?siteId=${site.id}`} className="inline-flex items-center gap-2 hover:underline">
-                                        <span className="text-gray-500 text-xs">Quotations</span>
+                                        <span className="text-gray-500 text-xs">Quotations : </span>
                                         <span className="font-medium">{quotations.filter(q => q.siteId === site.id).length}</span>
                                     </Link>
                                 </div>

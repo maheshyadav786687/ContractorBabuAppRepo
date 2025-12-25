@@ -133,7 +133,7 @@ export default function QuotationItemsEditor({ items, onChange }: QuotationItems
                                         </span>
 
                                         {/* Summary Details */}
-                                        <div className="flex items-center gap-3 text-sm hidden sm:flex">
+                                        <div className="hidden sm:flex items-center gap-3 text-sm">
                                             {(item.quantity > 0 || item.rate > 0 || item.area) && (
                                                 <div className="flex items-center gap-2 text-gray-500 bg-white px-2 py-1 rounded-lg border shadow-sm">
                                                     {item.area && (

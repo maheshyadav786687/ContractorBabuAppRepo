@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link, useSearchParams } from "react-router-dom"
-import { Plus, Search, Edit, Trash2, FolderKanban, Calendar, DollarSign, Grid3x3, List, Loader2, FileText, MoreVertical } from "lucide-react"
+import { Plus, Search, Edit, Trash2, FolderKanban, Calendar,  Grid3x3, List, Loader2, FileText, MoreVertical, IndianRupee } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -311,11 +311,11 @@ export default function ProjectsPage() {
                                     <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                                                <DollarSign className="h-3.5 w-3.5" />
+                                                <IndianRupee className="h-3.5 w-3.5" />
                                                 Budget
                                             </div>
                                             <p className="font-semibold text-gray-900">
-                                                ₹{project.estimatedBudget?.toLocaleString() || '0'}
+                                                {project.estimatedBudget?.toLocaleString() || '0'}
                                             </p>
                                         </div>
                                         <div className="space-y-1">
@@ -331,9 +331,9 @@ export default function ProjectsPage() {
                                             <Link to={`/quotations?projectId=${project.id}`} className="hover:underline">
                                                 <div className="flex items-center gap-1.5 text-xs text-gray-500">
                                                     <FileText className="h-3.5 w-3.5" />
-                                                    Quotations
+                                                    Quotations  : 
+                                                <span className="font-semibold text-gray-900">{quotations.filter(q => q.projectId === project.id).length}</span>
                                                 </div>
-                                                <p className="font-semibold text-gray-900">{quotations.filter(q => q.projectId === project.id).length}</p>
                                             </Link>
                                         </div>
                                     </div>

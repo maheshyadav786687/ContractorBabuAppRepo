@@ -105,8 +105,8 @@ export default function QuotationView() {
                                     <tr>
                                         <td style="padding:8px;border:1px solid #ddd;text-align:center">${idx + 1}</td>
                                         <td style="padding:8px;border:1px solid #ddd">${it.description || ''}</td>
-                                        <td style="padding:8px;border:1px solid #ddd">${(it.length ?? '-') + ' × ' + (it.width ?? '-') + ' × ' + (it.height ?? '-')}</td>
                                         <td style="padding:8px;border:1px solid #ddd;text-align:center">${it.isWithMaterial ? 'Yes' : 'No'}</td>
+                                        <td style="padding:8px;border:1px solid #ddd">${(it.length ?? '-') + ' × ' + (it.width ?? '-') + ' × ' + (it.height ?? '-')}</td>
                                         <td style="padding:8px;border:1px solid #ddd;text-align:center">${it.area ?? '-'}</td>
                                         <td style="padding:8px;border:1px solid #ddd;text-align:center">${it.quantity ?? ''}</td>
                                         <td style="padding:8px;border:1px solid #ddd;text-align:center">${it.unit ?? ''}</td>
@@ -192,8 +192,8 @@ export default function QuotationView() {
                                 <tr className="text-left text-xs text-gray-500 border-b">
                                     <th className="py-3 w-[40px]">#</th>
                                     <th className="py-3">Description</th>
-                                    <th className="py-3">Dimensions</th>
                                     <th className="py-3">Incl. Material</th>
+                                    <th className="py-3">Dimensions</th>
                                     <th className="py-3">Area</th>
                                     <th className="py-3">Qty</th>
                                     <th className="py-3">Unit</th>
@@ -206,8 +206,8 @@ export default function QuotationView() {
                                     <tr key={idx} className="border-b hover:bg-gray-50">
                                         <td className="py-4 align-top">{idx + 1}</td>
                                         <td className="py-4 align-top">{it.description}</td>
-                                        <td className="py-4 align-top">{(it.length ?? '-') + ' × ' + (it.width ?? '-') + ' × ' + (it.height ?? '-')}</td>
                                         <td className="py-4 align-top">{it.isWithMaterial ? 'Yes' : 'No'}</td>
+                                        <td className="py-4 align-top">{(it.length ?? '-') + ' × ' + (it.width ?? '-') + ' × ' + (it.height ?? '-')}</td>
                                         <td className="py-4 align-top">{it.area ?? '-'}</td>
                                         <td className="py-4 align-top">{it.quantity ?? '-'}</td>
                                         <td className="py-4 align-top">{it.unit ?? '-'}</td>

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
 const DropdownContext = createContext<{
-    triggerRef: React.RefObject<HTMLButtonElement>;
+    triggerRef: React.RefObject<HTMLButtonElement | null>;
 }>({
     triggerRef: { current: null }
 });
