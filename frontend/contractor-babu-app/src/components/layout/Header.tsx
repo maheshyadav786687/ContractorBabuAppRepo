@@ -1,4 +1,4 @@
-import { Search, Moon, ChevronRight, Menu } from "lucide-react"
+import { Search, Moon, ChevronRight, Menu, Home } from "lucide-react"
 import { authService } from "@/services/authService"
 import { useLocation } from "react-router-dom"
 
@@ -21,7 +21,10 @@ export default function Header({ onMobileToggle }: { onMobileToggle?: () => void
                     <Menu className="h-5 w-5" />
                 </button>
                 <div className="flex items-center gap-2">
-                    <span className="hover:text-gray-900 cursor-pointer">Home</span>
+                    <a href="/dashboard" className="hover:text-gray-900 cursor-pointer flex items-center gap-1">
+                        <Home className="h-4 w-4" />
+                        <span>Home</span>
+                    </a>
                     <ChevronRight className="h-4 w-4" />
                     <span className="font-medium text-gray-900">{currentPage}</span>
                 </div>

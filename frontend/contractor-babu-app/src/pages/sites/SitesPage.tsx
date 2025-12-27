@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link, useSearchParams } from "react-router-dom"
-import { Plus, Search, Edit, Trash2, MapPin, Building2, Loader2, RefreshCw, LogOut, AlertCircle, Grid3x3, List, User, MoreVertical } from "lucide-react"
+import { Plus, Search, Edit, Trash2, MapPin, Building2, Loader2, RefreshCw, LogOut, AlertCircle, Grid3x3, List, User, MoreVertical, X, Save, FolderKanban, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -273,133 +273,30 @@ export default function SitesPage() {
                 /* Card View */
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {filteredSites.map((site) => (
-                        <Card key={site.id} className="group hover:bg-white transition-all border-gray-200 hover:border-primary">
-                            <CardContent className="p-6">
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 text-white font-bold text-xl flex items-center justify-center shadow-md">
-                                        {site.name.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div className="flex gap-1">
-                                        <DropdownMenu>
-                                            <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === site.id ? null : site.id)} data-dropdown-trigger>
-                                                <Button variant="ghostPrimary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownTrigger>
-                                            <DropdownContent open={openActionMenu === site.id} onClose={() => setOpenActionMenu(null)}>
-                                                <DropdownItem onClick={() => { handleOpenDialog(site); setOpenActionMenu(null); }} icon={Edit}>
-                                                    Edit
-                                                </DropdownItem>
-                                                <DropdownItem onClick={() => { handleDelete(site.id); setOpenActionMenu(null); }} icon={Trash2} className="text-red-600 hover:bg-red-50">
-                                                    Delete
-                                                </DropdownItem>
-                                            </DropdownContent>
-                                        </DropdownMenu>
-                                    </div>
-                                </div>
-
-                                <h3 className="font-bold text-lg text-gray-900 mb-1">{site.name}</h3>
-                                <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                                    <User className="h-3.5 w-3.5" />
-                                    <span>{getClientName(site.clientId)}</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-sm text-gray-600 mb-2">
-                                    <Link to={`/projects?siteId=${site.id}`} className="inline-flex items-center gap-2 hover:underline">
-                                        <span className="text-gray-500 text-xs">Projects : </span>
-                                        <span className="font-medium">{projects.filter(p => p.siteId === site.id).length}</span>
-                                    </Link>
-                                    <Link to={`/quotations?siteId=${site.id}`} className="inline-flex items-center gap-2 hover:underline">
-                                        <span className="text-gray-500 text-xs">Quotations : </span>
-                                        <span className="font-medium">{quotations.filter(q => q.siteId === site.id).length}</span>
-                                    </Link>
-                                </div>
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex items-start gap-2 text-gray-600">
-                                        <MapPin className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
-                                        <div>
-                                            <div className="line-clamp-2">{site.address}</div>
-                                            {(site.city || site.state || site.zipCode) && (
-                                                <div className="text-gray-500 mt-1">
-                                                    {[site.city, site.state, site.zipCode].filter(Boolean).join(', ')}
+                        <Card key={site.id} className="group hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 border-gray-200 hover:border-primary/50 overflow-hidden">
+                            <CardContent className="p-0">
+                                <div className="p-6">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-12 w-12 rounded-xl bg-primary/10 text-primary font-bold text-xl flex items-center justify-center shadow-inner">
+                                                <Building2 className="h-6 w-6" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-lg text-gray-900 group-hover:text-primary transition-colors line-clamp-1">{site.name}</h3>
+                                                <div className="flex items-center gap-1 text-xs text-gray-500">
+                                                    <User className="h-3 w-3" />
+                                                    <span>{getClientName(site.clientId)}</span>
                                                 </div>
-                                            )}
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-
-                                <div className="mt-4 pt-4 border-t">
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${site.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                                        {site.isActive ? 'Active' : 'Inactive'}
-                                    </span>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            ) : (
-                /* Table View */
-                <Card>
-                <div className="bg-transparent rounded-md border border-gray-200 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Site</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projects</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quotations</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                                {filteredSites.map((site) => (
-                                    <tr key={site.id} className="hover:bg-blue-50/50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 text-white font-bold flex items-center justify-center shadow-sm">
-                                                    {site.name.charAt(0).toUpperCase()}
-                                                </div>
-                                                <div className="font-medium text-gray-900">{site.name}</div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-sm text-gray-900">{getClientName(site.clientId)}</div>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <Link to={`/projects?siteId=${site.id}`} className="hover:underline">
-                                                <div className="font-medium">{projects.filter(p => p.siteId === site.id).length}</div>
-                                            </Link>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <Link to={`/quotations?siteId=${site.id}`} className="hover:underline">
-                                                <div className="font-medium">{quotations.filter(q => q.siteId === site.id).length}</div>
-                                            </Link>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-sm">
-                                                <div className="text-gray-900">{site.address}</div>
-                                                {(site.city || site.state || site.zipCode) && (
-                                                    <div className="text-gray-500">
-                                                        {[site.city, site.state, site.zipCode].filter(Boolean).join(', ')}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${site.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                                                {site.isActive ? 'Active' : 'Inactive'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
+                                        <div className="flex flex-col items-end gap-2">
                                             <DropdownMenu>
                                                 <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === site.id ? null : site.id)} data-dropdown-trigger>
-                                                    <Button variant="ghostPrimary" size="icon" className="h-8 w-8">
+                                                    <Button variant="ghostPrimary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-all">
                                                         <MoreVertical className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownTrigger>
-                                                <DropdownContent open={openActionMenu === site.id} onClose={() => setOpenActionMenu(null)} align="right">
+                                                <DropdownContent open={openActionMenu === site.id} onClose={() => setOpenActionMenu(null)}>
                                                     <DropdownItem onClick={() => { handleOpenDialog(site); setOpenActionMenu(null); }} icon={Edit}>
                                                         Edit
                                                     </DropdownItem>
@@ -408,13 +305,127 @@ export default function SitesPage() {
                                                     </DropdownItem>
                                                 </DropdownContent>
                                             </DropdownMenu>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${site.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                                {site.isActive ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3 mb-6">
+                                        <div className="flex items-start gap-2.5 text-sm text-gray-600 min-h-[40px]">
+                                            <MapPin className="h-4 w-4 text-primary/60 mt-0.5 flex-shrink-0" />
+                                            <div className="line-clamp-2">
+                                                {site.address}
+                                                {(site.city || site.state) && (
+                                                    <span className="text-gray-400 block text-xs mt-0.5">
+                                                        {[site.city, site.state].filter(Boolean).join(', ')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <Link to={`/projects?siteId=${site.id}`} className="flex flex-col p-2.5 rounded-lg bg-gray-50 hover:bg-primary/5 transition-colors group/link">
+                                            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Projects</span>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-lg font-bold text-gray-900 group-hover/link:text-primary">{projects.filter(p => p.siteId === site.id).length}</span>
+                                                <FolderKanban className="h-4 w-4 text-gray-300 group-hover/link:text-primary/40" />
+                                            </div>
+                                        </Link>
+                                        <Link to={`/quotations?siteId=${site.id}`} className="flex flex-col p-2.5 rounded-lg bg-gray-50 hover:bg-primary/5 transition-colors group/link">
+                                            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Quotations</span>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-lg font-bold text-gray-900 group-hover/link:text-primary">{quotations.filter(q => q.siteId === site.id).length}</span>
+                                                <FileText className="h-4 w-4 text-gray-300 group-hover/link:text-primary/40" />
+                                            </div>
+                                        </Link>
+                                    </div>
+                                </div>
+                                <div className="h-1 w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </CardContent>
+                        </Card>
+                    ))}
                 </div>
+            ) : (
+                /* Table View */
+                <Card>
+                    <div className="bg-transparent rounded-md border border-gray-200 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Site</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projects</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quotations</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                    {filteredSites.map((site) => (
+                                        <tr key={site.id} className="hover:bg-blue-50/50 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 text-white font-bold flex items-center justify-center shadow-sm">
+                                                        {site.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div className="font-medium text-gray-900">{site.name}</div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm text-gray-900">{getClientName(site.clientId)}</div>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <Link to={`/projects?siteId=${site.id}`} className="hover:underline">
+                                                    <div className="font-medium">{projects.filter(p => p.siteId === site.id).length}</div>
+                                                </Link>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <Link to={`/quotations?siteId=${site.id}`} className="hover:underline">
+                                                    <div className="font-medium">{quotations.filter(q => q.siteId === site.id).length}</div>
+                                                </Link>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm">
+                                                    <div className="text-gray-900">{site.address}</div>
+                                                    {(site.city || site.state || site.zipCode) && (
+                                                        <div className="text-gray-500">
+                                                            {[site.city, site.state, site.zipCode].filter(Boolean).join(', ')}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${site.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                                                    {site.isActive ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <DropdownMenu>
+                                                    <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === site.id ? null : site.id)} data-dropdown-trigger>
+                                                        <Button variant="ghostPrimary" size="icon" className="h-8 w-8">
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownTrigger>
+                                                    <DropdownContent open={openActionMenu === site.id} onClose={() => setOpenActionMenu(null)} align="right">
+                                                        <DropdownItem onClick={() => { handleOpenDialog(site); setOpenActionMenu(null); }} icon={Edit}>
+                                                            Edit
+                                                        </DropdownItem>
+                                                        <DropdownItem onClick={() => { handleDelete(site.id); setOpenActionMenu(null); }} icon={Trash2} className="text-red-600 hover:bg-red-50">
+                                                            Delete
+                                                        </DropdownItem>
+                                                    </DropdownContent>
+                                                </DropdownMenu>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </Card>
             )}
 
@@ -422,7 +433,10 @@ export default function SitesPage() {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="w-full sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-bold">{editingSite ? "Edit Site" : "Add New Site"}</DialogTitle>
+                        <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                            {editingSite ? <Edit className="h-6 w-6" /> : <Plus className="h-6 w-6" />}
+                            {editingSite ? "Edit Site" : "Add New Site"}
+                        </DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">
@@ -491,13 +505,20 @@ export default function SitesPage() {
 
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                                <X className="mr-2 h-4 w-4" />
                                 Cancel
                             </Button>
                             <Button
                                 type="submit"
                                 disabled={submitting}
                             >
-                                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {submitting ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : editingSite ? (
+                                    <Save className="mr-2 h-4 w-4" />
+                                ) : (
+                                    <Plus className="mr-2 h-4 w-4" />
+                                )}
                                 {editingSite ? "Update" : "Create"}
                             </Button>
                         </DialogFooter>

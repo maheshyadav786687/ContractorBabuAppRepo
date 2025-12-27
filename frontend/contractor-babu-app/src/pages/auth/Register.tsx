@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, HardHat } from "lucide-react"
+import { Loader2, HardHat, UserPlus, LogIn } from "lucide-react"
 import { authService } from "@/services/authService"
 
 export default function Register() {
@@ -125,8 +125,10 @@ export default function Register() {
                                     />
                                 </div>
                                 <Button disabled={isLoading} className="w-full mt-2">
-                                    {isLoading && (
+                                    {isLoading ? (
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <UserPlus className="mr-2 h-4 w-4" />
                                     )}
                                     Create Account
                                 </Button>
@@ -135,7 +137,10 @@ export default function Register() {
                     </CardContent>
                 </Card>
                 <p className="mt-4 text-center text-sm text-gray-500">
-                    Already have an account? <a href="/login" className="text-primary hover:underline font-medium">Sign In</a>
+                    Already have an account? <a href="/login" className="text-primary hover:underline font-medium inline-flex items-center gap-1">
+                        <LogIn className="h-4 w-4" />
+                        Sign In
+                    </a>
                 </p>
             </div>
         </div>

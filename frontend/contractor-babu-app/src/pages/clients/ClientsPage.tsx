@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { Plus, Search, Edit, Trash2, Mail, Phone, MapPin, Loader2, RefreshCw, LogOut, AlertCircle, Grid3x3, List, Users, Building2, MoreVertical } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Mail, Phone, MapPin, Loader2, RefreshCw, LogOut, AlertCircle, Grid3x3, List, Users, Building2, MoreVertical, X, Save, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -232,134 +232,30 @@ export default function ClientsPage() {
                 /* Card View */
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {filteredClients.map((client) => (
-                        <Card key={client.id} className="group hover:bg-white transition-all border-gray-200 hover:border-primary">
-                            <CardContent className="p-6">
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="h-12 w-12 rounded-lg bg-blue-600 text-white font-bold text-xl flex items-center justify-center">
-                                        {client.name.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div className="flex gap-1">
-                                        <DropdownMenu>
-                                            <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === client.id ? null : client.id)} data-dropdown-trigger>
-                                                <Button variant="ghostPrimary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownTrigger>
-                                            <DropdownContent open={openActionMenu === client.id} onClose={() => setOpenActionMenu(null)}>
-                                                <DropdownItem onClick={() => { handleOpenDialog(client); setOpenActionMenu(null); }} icon={Edit}>
-                                                    Edit
-                                                </DropdownItem>
-                                                <DropdownItem onClick={() => { handleDelete(client.id); setOpenActionMenu(null); }} icon={Trash2} className="text-red-600 hover:bg-red-50">
-                                                    Delete
-                                                </DropdownItem>
-                                            </DropdownContent>
-                                        </DropdownMenu>
-                                    </div>
-                                </div>
-
-                                <h3 className="font-bold text-lg text-gray-900 mb-1">{client.name}</h3>
-                                <p className="text-sm text-gray-500 mb-4">{client.contactPerson || 'No contact person'}</p>
-
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex items-center gap-2 text-gray-600">
-                                        <Mail className="h-4 w-4 text-blue-500" />
-                                        <span className="truncate">{client.email}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-gray-600">
-                                        <Phone className="h-4 w-4 text-green-500" />
-                                        <span>{client.phone}</span>
-                                    </div>
-                                    <div className="flex items-start gap-2 text-gray-600">
-                                        <MapPin className="h-4 w-4 text-red-500 mt-0.5" />
-                                        <span className="line-clamp-2">{client.address}</span>
-                                    </div>
-                                </div>
-
-                                <div className="mt-3 text-sm text-gray-600 flex items-center gap-3">
-                                    <Building2 className="h-4 w-4 text-gray-500" />
-                                    <Link to={`/sites?clientId=${client.id}`} className="hover:underline">
-                                        <span>{sites.filter(s => s.clientId === client.id).length} site(s)</span>
-                                    </Link>
-                                </div>
-
-                                {(client.gstNumber || client.panNumber) && (
-                                    <div className="mt-4 pt-4 border-t grid grid-cols-2 gap-2 text-xs">
-                                        {client.gstNumber && (
-                                            <div>
-                                                <span className="text-gray-400 block">GST</span>
-                                                <span className="font-medium">{client.gstNumber}</span>
+                        <Card key={client.id} className="group hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 border-gray-200 hover:border-primary/50 overflow-hidden">
+                            <CardContent className="p-0">
+                                <div className="p-6">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-12 w-12 rounded-xl bg-primary/10 text-primary font-bold text-xl flex items-center justify-center shadow-inner">
+                                                <Users className="h-6 w-6" />
                                             </div>
-                                        )}
-                                        {client.panNumber && (
                                             <div>
-                                                <span className="text-gray-400 block">PAN</span>
-                                                <span className="font-medium">{client.panNumber}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            ) : (
-                <Card>
-                    <div className="bg-transparent rounded-md border border-gray-200 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sites</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">GST/PAN</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                                {filteredClients.map((client) => (
-                                    <tr key={client.id} className="hover:bg-blue-50/50 transition-colors">
-                                            <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded-lg bg-blue-600 text-white font-bold flex items-center justify-center">
-                                                    {client.name.charAt(0).toUpperCase()}
-                                                </div>
-                                                <div>
-                                                    <div className="font-medium text-gray-900">{client.name}</div>
-                                                    <div className="text-sm text-gray-500">{client.contactPerson}</div>
+                                                <h3 className="font-bold text-lg text-gray-900 group-hover:text-primary transition-colors line-clamp-1">{client.name}</h3>
+                                                <div className="flex items-center gap-1 text-xs text-gray-500">
+                                                    <Mail className="h-3 w-3" />
+                                                    <span>{client.email}</span>
                                                 </div>
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-sm">
-                                                <div className="text-gray-900">{client.email}</div>
-                                                <div className="text-gray-500">{client.phone}</div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-sm text-gray-900 max-w-xs truncate">{client.address}</div>
-                                        </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <Link to={`/sites?clientId=${client.id}`} className="hover:underline">
-                                                    <div className="text-sm text-gray-900">{sites.filter(s => s.clientId === client.id).length}</div>
-                                                </Link>
-                                            </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-sm">
-                                                            {client.gstNumber && <div className="text-gray-900">GST: {client.gstNumber}</div>}
-                                                            {client.panNumber && <div className="text-gray-500">PAN: {client.panNumber}</div>}
-                                                            {!client.gstNumber && !client.panNumber && <span className="text-gray-400">-</span>}
-                                                        </div>
-                                        </td>
-                                            <td className="px-6 py-4 text-right">
+                                        </div>
+                                        <div className="flex flex-col items-end gap-2">
                                             <DropdownMenu>
                                                 <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === client.id ? null : client.id)} data-dropdown-trigger>
-                                                    <Button variant="ghostPrimary" size="icon" className="h-8 w-8">
+                                                    <Button variant="ghostPrimary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-all">
                                                         <MoreVertical className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownTrigger>
-                                                <DropdownContent open={openActionMenu === client.id} onClose={() => setOpenActionMenu(null)} align="right">
+                                                <DropdownContent open={openActionMenu === client.id} onClose={() => setOpenActionMenu(null)}>
                                                     <DropdownItem onClick={() => { handleOpenDialog(client); setOpenActionMenu(null); }} icon={Edit}>
                                                         Edit
                                                     </DropdownItem>
@@ -368,12 +264,110 @@ export default function ClientsPage() {
                                                     </DropdownItem>
                                                 </DropdownContent>
                                             </DropdownMenu>
-                                        </td>
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700">
+                                                Client
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3 mb-6">
+                                        <div className="flex items-center gap-2.5 text-sm text-gray-600">
+                                            <Phone className="h-4 w-4 text-primary/60 flex-shrink-0" />
+                                            <span>{client.phone}</span>
+                                        </div>
+                                        <div className="flex items-start gap-2.5 text-sm text-gray-600 min-h-[40px]">
+                                            <MapPin className="h-4 w-4 text-primary/60 mt-0.5 flex-shrink-0" />
+                                            <span className="line-clamp-2">{client.address}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1">
+                                        <Link to={`/sites?clientId=${client.id}`} className="flex flex-col p-2.5 rounded-lg bg-gray-50 hover:bg-primary/5 transition-colors group/link">
+                                            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Managed Sites</span>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-lg font-bold text-gray-900 group-hover/link:text-primary">{sites.filter(s => s.clientId === client.id).length}</span>
+                                                <Building2 className="h-4 w-4 text-gray-300 group-hover/link:text-primary/40" />
+                                            </div>
+                                        </Link>
+                                    </div>
+                                </div>
+                                <div className="h-1 w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            ) : (
+                <Card>
+                    <div className="bg-transparent rounded-md border border-gray-200 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sites</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">GST/PAN</th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                    {filteredClients.map((client) => (
+                                        <tr key={client.id} className="hover:bg-blue-50/50 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 rounded-lg bg-blue-600 text-white font-bold flex items-center justify-center">
+                                                        {client.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-medium text-gray-900">{client.name}</div>
+                                                        <div className="text-sm text-gray-500">{client.contactPerson}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm">
+                                                    <div className="text-gray-900">{client.email}</div>
+                                                    <div className="text-gray-500">{client.phone}</div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm text-gray-900 max-w-xs truncate">{client.address}</div>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <Link to={`/sites?clientId=${client.id}`} className="hover:underline">
+                                                    <div className="text-sm text-gray-900">{sites.filter(s => s.clientId === client.id).length}</div>
+                                                </Link>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm">
+                                                    {client.gstNumber && <div className="text-gray-900">GST: {client.gstNumber}</div>}
+                                                    {client.panNumber && <div className="text-gray-500">PAN: {client.panNumber}</div>}
+                                                    {!client.gstNumber && !client.panNumber && <span className="text-gray-400">-</span>}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <DropdownMenu>
+                                                    <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === client.id ? null : client.id)} data-dropdown-trigger>
+                                                        <Button variant="ghostPrimary" size="icon" className="h-8 w-8">
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownTrigger>
+                                                    <DropdownContent open={openActionMenu === client.id} onClose={() => setOpenActionMenu(null)} align="right">
+                                                        <DropdownItem onClick={() => { handleOpenDialog(client); setOpenActionMenu(null); }} icon={Edit}>
+                                                            Edit
+                                                        </DropdownItem>
+                                                        <DropdownItem onClick={() => { handleDelete(client.id); setOpenActionMenu(null); }} icon={Trash2} className="text-red-600 hover:bg-red-50">
+                                                            Delete
+                                                        </DropdownItem>
+                                                    </DropdownContent>
+                                                </DropdownMenu>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </Card>
 
@@ -383,7 +377,10 @@ export default function ClientsPage() {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="w-full sm:max-w-[1100px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-bold">{editingClient ? "Edit Client" : "Add New Client"}</DialogTitle>
+                        <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                            {editingClient ? <Edit className="h-6 w-6" /> : <UserPlus className="h-6 w-6" />}
+                            {editingClient ? "Edit Client" : "Add New Client"}
+                        </DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="grid gap-4 md:grid-cols-2">
@@ -459,13 +456,20 @@ export default function ClientsPage() {
 
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                                <X className="mr-2 h-4 w-4" />
                                 Cancel
                             </Button>
                             <Button
                                 type="submit"
                                 disabled={submitting}
                             >
-                                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {submitting ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : editingClient ? (
+                                    <Save className="mr-2 h-4 w-4" />
+                                ) : (
+                                    <UserPlus className="mr-2 h-4 w-4" />
+                                )}
                                 {editingClient ? "Update" : "Create"}
                             </Button>
                         </DialogFooter>

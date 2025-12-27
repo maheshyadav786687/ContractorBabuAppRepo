@@ -3,6 +3,7 @@ import {
     DollarSign,
     ClipboardList,
     LayoutDashboard,
+    Eye,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -125,6 +126,7 @@ export default function Dashboard() {
                                             <td className="py-4 px-4 text-sm text-gray-500">{project.dueDate}</td>
                                             <td className="py-4 px-4 text-right">
                                                 <Button variant="outline" size="sm" className="h-8 text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700">
+                                                    <Eye className="mr-2 h-3.5 w-3.5" />
                                                     View
                                                 </Button>
                                             </td>

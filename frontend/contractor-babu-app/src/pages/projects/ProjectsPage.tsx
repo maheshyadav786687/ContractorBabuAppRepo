@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link, useSearchParams } from "react-router-dom"
-import { Plus, Search, Edit, Trash2, FolderKanban, Calendar,  Grid3x3, List, Loader2, FileText, MoreVertical, IndianRupee } from "lucide-react"
+import { Plus, Search, Edit, Trash2, FolderKanban, Calendar, Grid3x3, List, Loader2, FileText, MoreVertical, IndianRupee, X, Save, ChevronDown, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -36,7 +36,7 @@ export default function ProjectsPage() {
         projectCode: "",
         name: "",
         description: "",
-        clientId:"",
+        clientId: "",
         // siteId will be set when associating project to a site
         siteId: "",
         projectType: "Residential",
@@ -262,147 +262,30 @@ export default function ProjectsPage() {
                 /* Card View */
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {filteredProjects.map((project) => (
-                        <Card key={project.id} className="hover:bg-white transition-all border-gray-200 group hover:border-primary">
-                            <CardContent className="p-6">
-                                <div className="flex items-start justify-between mb-4">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="font-mono text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                                {project.projectCode}
-                                            </span>
-                                            <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(project.status)}`}>
-                                                {project.status}
-                                            </span>
-                                        </div>
-                                        <h3 className="font-bold text-lg text-gray-900 line-clamp-1">{project.name}</h3>
-                                        <p className="text-sm text-gray-500">{project.clientName || 'Unknown Client'}</p>
-                                    </div>
-                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <DropdownMenu>
-                                            <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === project.id ? null : project.id)} data-dropdown-trigger>
-                                                <Button variant="ghostPrimary" size="icon" className="h-8 w-8">
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownTrigger>
-                                            <DropdownContent open={openActionMenu === project.id} onClose={() => setOpenActionMenu(null)}>
-                                                <DropdownItem onClick={() => { handleOpenDialog(project); setOpenActionMenu(null); }} icon={Edit}>
-                                                    Edit
-                                                </DropdownItem>
-                                                <DropdownItem onClick={() => { handleDelete(project.id); setOpenActionMenu(null); }} icon={Trash2} className="text-red-600 hover:bg-red-50">
-                                                    Delete
-                                                </DropdownItem>
-                                            </DropdownContent>
-                                        </DropdownMenu>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Progress</span>
-                                        <span className="font-medium text-blue-600">{project.progressPercentage}%</span>
-                                    </div>
-                                    <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-blue-600 rounded-full transition-all duration-500"
-                                            style={{ width: `${project.progressPercentage}%` }}
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                                                <IndianRupee className="h-3.5 w-3.5" />
-                                                Budget
+                        <Card key={project.id} className="group hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 border-gray-200 hover:border-primary/50 overflow-hidden">
+                            <CardContent className="p-0">
+                                <div className="p-6">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-12 w-12 rounded-xl bg-primary/10 text-primary font-bold text-xl flex items-center justify-center shadow-inner">
+                                                <FolderKanban className="h-6 w-6" />
                                             </div>
-                                            <p className="font-semibold text-gray-900">
-                                                {project.estimatedBudget?.toLocaleString() || '0'}
-                                            </p>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                                                <Calendar className="h-3.5 w-3.5" />
-                                                Due Date
-                                            </div>
-                                            <p className="font-semibold text-gray-900">
-                                                {project.plannedEndDate ? new Date(project.plannedEndDate).toLocaleDateString() : '-'}
-                                            </p>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <Link to={`/quotations?projectId=${project.id}`} className="hover:underline">
-                                                <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                                                    <FileText className="h-3.5 w-3.5" />
-                                                    Quotations  : 
-                                                <span className="font-semibold text-gray-900">{quotations.filter(q => q.projectId === project.id).length}</span>
-                                                </div>
-                                            </Link>
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            ) : (
-                /* Table View */
-                <Card>
-                <div className="bg-transparent rounded-md border border-gray-200 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-50 border-b">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Progress</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Budget</th>
-                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quotations</th>
-                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                                {filteredProjects.map((project) => (
-                                    <tr key={project.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4">
                                             <div>
-                                                <div className="font-medium text-gray-900">{project.name}</div>
-                                                <div className="text-xs text-gray-500 font-mono">{project.projectCode}</div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">
-                                            {project.clientName}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(project.status)}`}>
-                                                {project.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                                    <div
-                                                        className="h-full bg-blue-600 rounded-full"
-                                                        style={{ width: `${project.progressPercentage}%` }}
-                                                    />
+                                                <h3 className="font-bold text-lg text-gray-900 group-hover:text-primary transition-colors line-clamp-1">{project.name}</h3>
+                                                <div className="flex items-center gap-1 text-xs text-gray-500">
+                                                    <User className="h-3 w-3" />
+                                                    <span>{project.clientName || 'Unknown Client'}</span>
                                                 </div>
-                                                <span className="text-xs text-gray-600">{project.progressPercentage}%</span>
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-right text-sm font-medium text-gray-900">
-                                            ₹{project.estimatedBudget?.toLocaleString() || '0'}
-                                        </td>
-                                        <td className="px-6 py-4 text-right text-sm font-medium text-gray-900">
-                                            <Link to={`/quotations?projectId=${project.id}`} className="hover:underline">
-                                                {quotations.filter(q => q.projectId === project.id).length}
-                                            </Link>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
+                                        </div>
+                                        <div className="flex flex-col items-end gap-2">
                                             <DropdownMenu>
                                                 <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === project.id ? null : project.id)} data-dropdown-trigger>
-                                                    <Button variant="ghostPrimary" size="icon" className="h-8 w-8">
+                                                    <Button variant="ghostPrimary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-all">
                                                         <MoreVertical className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownTrigger>
-                                                <DropdownContent open={openActionMenu === project.id} onClose={() => setOpenActionMenu(null)} align="right">
+                                                <DropdownContent open={openActionMenu === project.id} onClose={() => setOpenActionMenu(null)}>
                                                     <DropdownItem onClick={() => { handleOpenDialog(project); setOpenActionMenu(null); }} icon={Edit}>
                                                         Edit
                                                     </DropdownItem>
@@ -411,13 +294,138 @@ export default function ProjectsPage() {
                                                     </DropdownItem>
                                                 </DropdownContent>
                                             </DropdownMenu>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusColor(project.status).replace('bg-', 'bg-').replace('text-', 'text-')}`}>
+                                                {project.status}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4 mb-6">
+                                        <div>
+                                            <div className="flex justify-between items-center text-xs mb-1.5">
+                                                <span className="text-gray-500 font-medium">Progress</span>
+                                                <span className="text-primary font-bold">{project.progressPercentage}%</span>
+                                            </div>
+                                            <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-primary rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(var(--primary),0.4)]"
+                                                    style={{ width: `${project.progressPercentage}%` }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3 mb-6">
+                                        <div className="p-2.5 rounded-lg bg-gray-50/50 border border-gray-100">
+                                            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block mb-1">Budget</span>
+                                            <div className="flex items-center gap-1">
+                                                <IndianRupee className="h-3 w-3 text-green-600" />
+                                                <span className="font-bold text-gray-900 leading-none">{project.estimatedBudget?.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                        <div className="p-2.5 rounded-lg bg-gray-50/50 border border-gray-100">
+                                            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block mb-1">Due Date</span>
+                                            <div className="flex items-center gap-1 text-gray-900 font-bold leading-none">
+                                                <Calendar className="h-3 w-3 text-blue-600" />
+                                                <span>{project.plannedEndDate ? new Date(project.plannedEndDate).toLocaleDateString() : '-'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <Link to={`/quotations?projectId=${project.id}`} className="flex items-center justify-between p-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors group/link border border-primary/10">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="p-1.5 rounded-lg bg-white shadow-sm">
+                                                <FileText className="h-4 w-4 text-primary" />
+                                            </div>
+                                            <span className="text-sm font-semibold text-gray-700">Quotations</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-lg font-bold text-primary">{quotations.filter(q => q.projectId === project.id).length}</span>
+                                            <X className="h-3 w-3 text-primary/30 rotate-45" />
+                                        </div>
+                                    </Link>
+                                </div>
+                                <div className="h-1 w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </CardContent>
+                        </Card>
+                    ))}
                 </div>
+            ) : (
+                /* Table View */
+                <Card>
+                    <div className="bg-transparent rounded-md border border-gray-200 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-gray-50 border-b">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Progress</th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Budget</th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quotations</th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                    {filteredProjects.map((project) => (
+                                        <tr key={project.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4">
+                                                <div>
+                                                    <div className="font-medium text-gray-900">{project.name}</div>
+                                                    <div className="text-xs text-gray-500 font-mono">{project.projectCode}</div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">
+                                                {project.clientName}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(project.status)}`}>
+                                                    {project.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-24 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="h-full bg-blue-600 rounded-full"
+                                                            style={{ width: `${project.progressPercentage}%` }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-xs text-gray-600">{project.progressPercentage}%</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-right text-sm font-medium text-gray-900">
+                                                ₹{project.estimatedBudget?.toLocaleString() || '0'}
+                                            </td>
+                                            <td className="px-6 py-4 text-right text-sm font-medium text-gray-900">
+                                                <Link to={`/quotations?projectId=${project.id}`} className="hover:underline">
+                                                    {quotations.filter(q => q.projectId === project.id).length}
+                                                </Link>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <DropdownMenu>
+                                                    <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === project.id ? null : project.id)} data-dropdown-trigger>
+                                                        <Button variant="ghostPrimary" size="icon" className="h-8 w-8">
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownTrigger>
+                                                    <DropdownContent open={openActionMenu === project.id} onClose={() => setOpenActionMenu(null)} align="right">
+                                                        <DropdownItem onClick={() => { handleOpenDialog(project); setOpenActionMenu(null); }} icon={Edit}>
+                                                            Edit
+                                                        </DropdownItem>
+                                                        <DropdownItem onClick={() => { handleDelete(project.id); setOpenActionMenu(null); }} icon={Trash2} className="text-red-600 hover:bg-red-50">
+                                                            Delete
+                                                        </DropdownItem>
+                                                    </DropdownContent>
+                                                </DropdownMenu>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </Card>
             )}
 
@@ -425,7 +433,10 @@ export default function ProjectsPage() {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="w-full sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle className="text-xl font-bold">{editingProject ? 'Edit Project' : 'Create New Project'}</DialogTitle>
+                        <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                            {editingProject ? <Edit className="h-6 w-6" /> : <Plus className="h-6 w-6" />}
+                            {editingProject ? 'Edit Project' : 'Create New Project'}
+                        </DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid gap-6 md:grid-cols-2">
@@ -472,7 +483,7 @@ export default function ProjectsPage() {
                                         onClick={() => setIsSiteDropdownOpen(o => !o)}
                                     >
                                         <span className="truncate">{sites.find(s => s.id === formData.siteId)?.name || 'Select Site'}</span>
-                                        <svg className="h-4 w-4 ml-2 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.06z" clipRule="evenodd"/></svg>
+                                        <ChevronDown className={`h-4 w-4 ml-2 text-gray-500 transition-transform ${isSiteDropdownOpen ? 'rotate-180' : ''}`} />
                                     </button>
 
                                     <div className={`absolute z-20 mt-1 w-full bg-white border rounded shadow-sm max-h-56 overflow-auto ${isSiteDropdownOpen ? 'block' : 'hidden'}`}>
@@ -599,10 +610,17 @@ export default function ProjectsPage() {
 
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                                <X className="mr-2 h-4 w-4" />
                                 Cancel
                             </Button>
                             <Button type="submit" disabled={submitting}>
-                                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {submitting ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : editingProject ? (
+                                    <Save className="mr-2 h-4 w-4" />
+                                ) : (
+                                    <Plus className="mr-2 h-4 w-4" />
+                                )}
                                 {editingProject ? 'Update Project' : 'Create Project'}
                             </Button>
                         </DialogFooter>

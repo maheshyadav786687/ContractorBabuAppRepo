@@ -4,7 +4,7 @@ import { quotationService } from '@/services/quotationService';
 import type { Quotation } from '@/types/quotation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { FileText, ArrowLeft } from 'lucide-react';
+import { FileText, ArrowLeft, Download, Loader2 } from 'lucide-react';
 
 export default function QuotationView() {
     const { id } = useParams();
@@ -28,7 +28,7 @@ export default function QuotationView() {
         load();
     }, [id]);
 
-    if (loading) return <div className="flex h-[50vh] items-center justify-center">Loading...</div>;
+    if (loading) return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-blue-600" /></div>;
     if (!quotation) return <div className="p-6">Quotation not found</div>;
 
     const calculateTotal = (items: any[]) => items.reduce((s, it) => s + (it.amount || 0), 0);
@@ -146,6 +146,7 @@ export default function QuotationView() {
                             }
                         }
                     }}>
+                        <Download className="mr-2 h-4 w-4" />
                         Download PDF
                     </Button>
                 </div>

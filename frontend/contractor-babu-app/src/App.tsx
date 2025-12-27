@@ -10,6 +10,7 @@ import SitesPage from './pages/sites/SitesPage';
 import QuotationsPage from './pages/quotations/QuotationsPage';
 const QuotationView = lazy(() => import('@/pages/quotations/QuotationView'));
 import ProjectsPage from './pages/projects/ProjectsPage';
+import TenantsPage from './pages/tenants/TenantsPage';
 
 function App() {
   return (
@@ -28,7 +29,7 @@ function App() {
 
           {/* Placeholder routes - will be implemented in phases */}
           <Route path="users" element={<div className="text-2xl font-bold">Users Module - Coming Soon</div>} />
-          <Route path="tenants" element={<div className="text-2xl font-bold">Tenants Module - Coming Soon</div>} />
+          <Route path="tenants" element={<TenantsPage />} />
           <Route path="clients" element={<ClientsPage />} />
           <Route path="sites" element={<SitesPage />} />
           <Route path="vendors" element={<div className="text-2xl font-bold">Vendors Module - Coming Soon</div>} />

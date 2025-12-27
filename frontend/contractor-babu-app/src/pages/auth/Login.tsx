@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, HardHat } from "lucide-react"
+import { Loader2, HardHat, LogIn, KeyRound, UserPlus } from "lucide-react"
 import { authService } from "@/services/authService"
 
 export default function Login() {
@@ -68,7 +68,10 @@ export default function Login() {
                                 <div className="grid gap-2">
                                     <div className="flex items-center justify-between">
                                         <Label htmlFor="password">Password</Label>
-                                        <a href="#" className="text-xs text-primary hover:underline">Forgot password?</a>
+                                        <a href="#" className="text-xs text-primary hover:underline flex items-center gap-1">
+                                            <KeyRound className="h-3 w-3" />
+                                            Forgot password?
+                                        </a>
                                     </div>
                                     <Input
                                         id="password"
@@ -80,8 +83,10 @@ export default function Login() {
                                     />
                                 </div>
                                 <Button disabled={isLoading} className="w-full">
-                                    {isLoading && (
+                                    {isLoading ? (
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <LogIn className="mr-2 h-4 w-4" />
                                     )}
                                     Sign In
                                 </Button>
@@ -90,7 +95,9 @@ export default function Login() {
                     </CardContent>
                 </Card>
                 <p className="mt-4 text-center text-sm text-gray-500">
-                    Don't have an account? <a href="/register" className="text-primary hover:underline font-medium">Create new account</a>
+                    <a href="/register" className="text-primary hover:underline font-medium flex items-center gap-1 justify-center">
+                    <UserPlus className="h-4 w-4" />
+                    Don't have an account? Create new account</a>
                 </p>
             </div>
         </div>

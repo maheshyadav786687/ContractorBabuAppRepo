@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectItem } from "@/components/ui/select";
 import { DropdownMenu, DropdownTrigger, DropdownContent, DropdownItem } from '@/components/ui/dropdown';
-import { Plus, Search, Edit, Trash2, FileText, Calendar, DollarSign, Grid3x3, List, Loader2, Eye, MoreVertical } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, FileText, Calendar, IndianRupee, Grid3x3, List, Loader2, Eye, MoreVertical, Download, ChevronDown, X, Save, FolderKanban } from 'lucide-react';
 import QuotationItemsEditor from '@/components/quotations/QuotationItemsEditor';
 
 // PDF generation uses a printable HTML fallback when PDF libs are not installed.
@@ -79,8 +79,8 @@ export default function QuotationsPage() {
     }, [sites, projects, searchParams]);
 
     const loadData = async () => {
-            try {
-                setLoading(true);
+        try {
+            setLoading(true);
             const [quotationsData, projectsData, sitesData, clientsData] = await Promise.all([
                 quotationService.getAll(),
                 projectService.getAll(),
@@ -485,126 +485,30 @@ export default function QuotationsPage() {
                 /* Card View */
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {filteredQuotations.map((quotation) => (
-                        <Card key={quotation.id} className="hover:bg-white transition-all border-gray-200 hover:border-primary">
-                            <CardContent className="p-6">
-                                <div className="flex items-start justify-between mb-4">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <FileText className="h-5 w-5 text-blue-600" />
-                                            <span className="font-bold text-lg">{quotation.quotationNumber}</span>
-                                        </div>
-                                        <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(quotation.status)}`}>
-                                            {quotation.status}
-                                        </span>
-                                    </div>
-                                    <DropdownMenu>
-                                        <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === quotation.id ? null : quotation.id)} data-dropdown-trigger>
-                                            <Button variant="ghostPrimary" size="icon" className="h-8 w-8">
-                                                <MoreVertical className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownTrigger>
-                                        <DropdownContent open={openActionMenu === quotation.id} onClose={() => setOpenActionMenu(null)}>
-                                            <DropdownItem onClick={() => { navigate(`/quotations/${quotation.id}`); setOpenActionMenu(null); }} icon={Eye}>
-                                                View
-                                            </DropdownItem>
-                                            <DropdownItem onClick={() => { handleOpenDialog(quotation); setOpenActionMenu(null); }} icon={Edit}>
-                                                Edit
-                                            </DropdownItem>
-                                            <DropdownItem onClick={() => { handleDelete(quotation.id); setOpenActionMenu(null); }} icon={Trash2} className="text-red-600 hover:bg-red-50">
-                                                Delete
-                                            </DropdownItem>
-                                        </DropdownContent>
-                                    </DropdownMenu>
-                                </div>
-
-                                <p className="text-sm text-gray-500 mb-2">{quotation.projectName}</p>
-                                {quotation.description && (
-                                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">{quotation.description}</p>
-                                )}
-                                {quotation.remarks && (
-                                    <p className="text-xs text-gray-500 mb-4 italic line-clamp-2">Note: {quotation.remarks}</p>
-                                )}
-
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex items-center gap-2 text-gray-600">
-                                        <Calendar className="h-4 w-4 text-blue-500" />
-                                        <span>{new Date(quotation.quotationDate).toLocaleDateString()}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-gray-600">
-                                        <DollarSign className="h-4 w-4 text-green-500" />
-                                        <span className="font-semibold">₹{calculateTotal(quotation.items).toLocaleString()}</span>
-                                    </div>
-                                </div>
-
-                                <div className="mt-4 pt-4 border-t text-xs text-gray-500">
-                                    <button
-                                        type="button"
-                                        onClick={() => handleDownloadPdf(quotation)}
-                                        className="text-primary hover:underline"
-                                    >
-                                        {quotation.items.length} item(s)
-                                    </button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            ) : (
-                /* Table View */
-                <Card>
-                    <div className="bg-transparent rounded-md border border-gray-200">
-                        <div>
-                            <table className="w-full">
-                            <thead className="bg-gray-50 border-b">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quotation</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Remarks</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                                {filteredQuotations.map((quotation) => (
-                                    <tr key={quotation.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4">
+                        <Card key={quotation.id} className="group hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 border-gray-200 hover:border-primary/50 overflow-hidden">
+                            <CardContent className="p-0">
+                                <div className="p-6">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-12 w-12 rounded-xl bg-primary/10 text-primary font-bold text-xl flex items-center justify-center shadow-inner">
+                                                <FileText className="h-6 w-6" />
+                                            </div>
                                             <div>
-                                                <div className="font-medium text-gray-900">{quotation.quotationNumber}</div>
-                                                {quotation.description && (
-                                                    <div className="text-xs text-gray-500 truncate max-w-[200px]">{quotation.description}</div>
-                                                )}
+                                                <h3 className="font-bold text-lg text-gray-900 group-hover:text-primary transition-colors line-clamp-1">{quotation.quotationNumber}</h3>
+                                                <div className="flex items-center gap-1 text-xs text-gray-500">
+                                                    <FolderKanban className="h-3 w-3" />
+                                                    <span>{quotation.projectName}</span>
+                                                </div>
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-sm text-gray-900">{quotation.projectName}</div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-sm text-gray-900">
-                                                {new Date(quotation.quotationDate).toLocaleDateString()}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(quotation.status)}`}>
-                                                {quotation.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-sm text-gray-500 truncate max-w-[150px]">{quotation.remarks || '-'}</div>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="font-semibold text-gray-900">₹{calculateTotal(quotation.items).toLocaleString()}</div>
-                                            <div className="text-xs text-gray-500">{quotation.items.length} items</div>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
+                                        </div>
+                                        <div className="flex flex-col items-end gap-2">
                                             <DropdownMenu>
                                                 <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === quotation.id ? null : quotation.id)} data-dropdown-trigger>
-                                                    <Button variant="ghostPrimary" size="icon" className="h-8 w-8">
+                                                    <Button variant="ghostPrimary" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-all">
                                                         <MoreVertical className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownTrigger>
-                                                <DropdownContent open={openActionMenu === quotation.id} onClose={() => setOpenActionMenu(null)} align="right">
+                                                <DropdownContent open={openActionMenu === quotation.id} onClose={() => setOpenActionMenu(null)}>
                                                     <DropdownItem onClick={() => { navigate(`/quotations/${quotation.id}`); setOpenActionMenu(null); }} icon={Eye}>
                                                         View
                                                     </DropdownItem>
@@ -616,13 +520,135 @@ export default function QuotationsPage() {
                                                     </DropdownItem>
                                                 </DropdownContent>
                                             </DropdownMenu>
-                                        </td>
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusColor(quotation.status)}`}>
+                                                {quotation.status}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3 mb-6">
+                                        {quotation.description ? (
+                                            <p className="text-sm text-gray-600 line-clamp-2 min-h-[40px] italic">
+                                                "{quotation.description}"
+                                            </p>
+                                        ) : (
+                                            <div className="min-h-[40px] flex items-center text-gray-300 italic text-sm">No description provided</div>
+                                        )}
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3 mb-6">
+                                        <div className="p-2.5 rounded-lg bg-gray-50/50 border border-gray-100">
+                                            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block mb-1">Total Amount</span>
+                                            <div className="flex items-center gap-1">
+                                                <IndianRupee className="h-3 w-3 text-green-600" />
+                                                <span className="font-bold text-gray-900 leading-none">{calculateTotal(quotation.items).toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                        <div className="p-2.5 rounded-lg bg-gray-50/50 border border-gray-100">
+                                            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider block mb-1">Date</span>
+                                            <div className="flex items-center gap-1 text-gray-900 font-bold leading-none">
+                                                <Calendar className="h-3 w-3 text-blue-600" />
+                                                <span>{new Date(quotation.quotationDate).toLocaleDateString()}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => handleDownloadPdf(quotation)}
+                                        className="w-full flex items-center justify-between p-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors group/link border border-primary/10"
+                                    >
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="p-1.5 rounded-lg bg-white shadow-sm">
+                                                <Download className="h-4 w-4 text-primary" />
+                                            </div>
+                                            <span className="text-sm font-semibold text-gray-700">Download PDF</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-xs font-bold text-primary/60">{quotation.items.length} items</span>
+                                            <X className="h-3 w-3 text-primary/30 rotate-45" />
+                                        </div>
+                                    </button>
+                                </div>
+                                <div className="h-1 w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            ) : (
+                /* Table View */
+                <Card>
+                    <div className="bg-transparent rounded-md border border-gray-200">
+                        <div>
+                            <table className="w-full">
+                                <thead className="bg-gray-50 border-b">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quotation</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Remarks</th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                    {filteredQuotations.map((quotation) => (
+                                        <tr key={quotation.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4">
+                                                <div>
+                                                    <div className="font-medium text-gray-900">{quotation.quotationNumber}</div>
+                                                    {quotation.description && (
+                                                        <div className="text-xs text-gray-500 truncate max-w-[200px]">{quotation.description}</div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm text-gray-900">{quotation.projectName}</div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm text-gray-900">
+                                                    {new Date(quotation.quotationDate).toLocaleDateString()}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(quotation.status)}`}>
+                                                    {quotation.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm text-gray-500 truncate max-w-[150px]">{quotation.remarks || '-'}</div>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="font-semibold text-gray-900">₹{calculateTotal(quotation.items).toLocaleString()}</div>
+                                                <div className="text-xs text-gray-500">{quotation.items.length} items</div>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <DropdownMenu>
+                                                    <DropdownTrigger onClick={() => setOpenActionMenu(openActionMenu === quotation.id ? null : quotation.id)} data-dropdown-trigger>
+                                                        <Button variant="ghostPrimary" size="icon" className="h-8 w-8">
+                                                            <MoreVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownTrigger>
+                                                    <DropdownContent open={openActionMenu === quotation.id} onClose={() => setOpenActionMenu(null)} align="right">
+                                                        <DropdownItem onClick={() => { navigate(`/quotations/${quotation.id}`); setOpenActionMenu(null); }} icon={Eye}>
+                                                            View
+                                                        </DropdownItem>
+                                                        <DropdownItem onClick={() => { handleOpenDialog(quotation); setOpenActionMenu(null); }} icon={Edit}>
+                                                            Edit
+                                                        </DropdownItem>
+                                                        <DropdownItem onClick={() => { handleDelete(quotation.id); setOpenActionMenu(null); }} icon={Trash2} className="text-red-600 hover:bg-red-50">
+                                                            Delete
+                                                        </DropdownItem>
+                                                    </DropdownContent>
+                                                </DropdownMenu>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
-                        </div>
+                    </div>
                 </Card>
             )}
 
@@ -630,7 +656,10 @@ export default function QuotationsPage() {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} className='p-0'>
                 <DialogContent className="w-full sm:max-w-[1200px] h-[90vh] flex flex-col p-0 gap-0 overflow-hidden mt-0">
                     <DialogHeader className="p-6 pb-2 shrink-0">
-                        <DialogTitle className="text-xl font-bold">{editingQuotation ? 'Edit Quotation' : 'Create Quotation'}</DialogTitle>
+                        <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                            {editingQuotation ? <Edit className="h-6 w-6" /> : <Plus className="h-6 w-6" />}
+                            {editingQuotation ? 'Edit Quotation' : 'Create Quotation'}
+                        </DialogTitle>
                         {editingQuotation && (
                             <div className="text-sm text-gray-500">
                                 {editingQuotation.quotationNumber}
@@ -660,64 +689,64 @@ export default function QuotationsPage() {
                                         onChange={(e) => setFormData({ ...formData, quotationDate: e.target.value })}
                                     />
                                 </div>
-                                 <div className="space-y-2">
-                                        <Label htmlFor="siteId">Site *</Label>
-                                        <div className="relative">
-                                            <button
-                                                type="button"
-                                                className="w-full text-left flex items-center justify-between rounded-md border border-input px-3 py-2 text-sm bg-white"
-                                                onClick={() => setIsSiteDropdownOpen(o => !o)}
-                                            >
-                                                <span className="truncate">{sites.find(s => s.id === formData.siteId)?.name || 'Select Site'}</span>
-                                                <svg className="h-4 w-4 ml-2 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.06z" clipRule="evenodd"/></svg>
-                                            </button>
+                                <div className="space-y-2">
+                                    <Label htmlFor="siteId">Site *</Label>
+                                    <div className="relative">
+                                        <button
+                                            type="button"
+                                            className="w-full text-left flex items-center justify-between rounded-md border border-input px-3 py-2 text-sm bg-white"
+                                            onClick={() => setIsSiteDropdownOpen(o => !o)}
+                                        >
+                                            <span className="truncate">{sites.find(s => s.id === formData.siteId)?.name || 'Select Site'}</span>
+                                            <ChevronDown className={`h-4 w-4 ml-2 text-gray-500 transition-transform ${isSiteDropdownOpen ? 'rotate-180' : ''}`} />
+                                        </button>
 
-                                            <div className={`absolute z-20 mt-1 w-full bg-white border rounded shadow-sm max-h-56 overflow-auto ${isSiteDropdownOpen ? 'block' : 'hidden'}`}>
-                                                {sites.length === 0 ? (
-                                                    <div className="p-3 text-sm text-gray-500">No sites found</div>
-                                                ) : (
-                                                    clients.length > 0 ? (
-                                                        clients.map(client => {
-                                                            const clientSites = sites.filter(s => s.clientId === client.id)
-                                                            if (clientSites.length === 0) return null
-                                                            return (
-                                                                <div key={client.id} className="border-b last:border-b-0">
-                                                                    <div className="px-3 py-2 bg-gray-50 text-sm font-medium text-gray-800">{client.name}</div>
-                                                                    {clientSites.map(site => (
-                                                                        <div
-                                                                            key={site.id}
-                                                                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm pl-6"
-                                                                            onClick={() => {
-                                                                                setFormData(prev => ({ ...prev, siteId: site.id }))
-                                                                                setIsSiteDropdownOpen(false)
-                                                                            }}
-                                                                        >
-                                                                            <div className="text-gray-900">{site.name}</div>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            )
-                                                        })
-                                                    ) : (
-                                                        sites.map(site => (
-                                                            <div
-                                                                key={site.id}
-                                                                className="p-3 hover:bg-gray-50 cursor-pointer"
-                                                                onClick={() => {
-                                                                    setFormData(prev => ({ ...prev, siteId: site.id }))
-                                                                    setIsSiteDropdownOpen(false)
-                                                                }}
-                                                            >
-                                                                <div className="font-medium text-gray-900 pl-6">{site.name}</div>
-                                                                <div className="text-xs text-gray-500 pl-9">{site.clientName || 'Unknown client'}</div>
+                                        <div className={`absolute z-20 mt-1 w-full bg-white border rounded shadow-sm max-h-56 overflow-auto ${isSiteDropdownOpen ? 'block' : 'hidden'}`}>
+                                            {sites.length === 0 ? (
+                                                <div className="p-3 text-sm text-gray-500">No sites found</div>
+                                            ) : (
+                                                clients.length > 0 ? (
+                                                    clients.map(client => {
+                                                        const clientSites = sites.filter(s => s.clientId === client.id)
+                                                        if (clientSites.length === 0) return null
+                                                        return (
+                                                            <div key={client.id} className="border-b last:border-b-0">
+                                                                <div className="px-3 py-2 bg-gray-50 text-sm font-medium text-gray-800">{client.name}</div>
+                                                                {clientSites.map(site => (
+                                                                    <div
+                                                                        key={site.id}
+                                                                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm pl-6"
+                                                                        onClick={() => {
+                                                                            setFormData(prev => ({ ...prev, siteId: site.id }))
+                                                                            setIsSiteDropdownOpen(false)
+                                                                        }}
+                                                                    >
+                                                                        <div className="text-gray-900">{site.name}</div>
+                                                                    </div>
+                                                                ))}
                                                             </div>
-                                                        ))
-                                                    )
-                                                )}
-                                            </div>
+                                                        )
+                                                    })
+                                                ) : (
+                                                    sites.map(site => (
+                                                        <div
+                                                            key={site.id}
+                                                            className="p-3 hover:bg-gray-50 cursor-pointer"
+                                                            onClick={() => {
+                                                                setFormData(prev => ({ ...prev, siteId: site.id }))
+                                                                setIsSiteDropdownOpen(false)
+                                                            }}
+                                                        >
+                                                            <div className="font-medium text-gray-900 pl-6">{site.name}</div>
+                                                            <div className="text-xs text-gray-500 pl-9">{site.clientName || 'Unknown client'}</div>
+                                                        </div>
+                                                    ))
+                                                )
+                                            )}
                                         </div>
+                                    </div>
                                 </div>
-                                  <div className="space-y-2">
+                                <div className="space-y-2">
                                     <Label htmlFor="projectId">Project</Label>
                                     <Select
                                         id="projectId"
@@ -824,6 +853,7 @@ export default function QuotationsPage() {
 
                     <DialogFooter className="p-6 pt-2 shrink-0">
                         <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                            <X className="mr-2 h-4 w-4" />
                             Cancel
                         </Button>
                         <Button
@@ -831,7 +861,13 @@ export default function QuotationsPage() {
                             form="quotation-form"
                             disabled={submitting}
                         >
-                            {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {submitting ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : editingQuotation ? (
+                                <Save className="mr-2 h-4 w-4" />
+                            ) : (
+                                <Plus className="mr-2 h-4 w-4" />
+                            )}
                             {editingQuotation ? 'Update' : 'Create'}
                         </Button>
                     </DialogFooter>

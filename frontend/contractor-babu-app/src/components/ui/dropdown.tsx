@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, createContext, useContext } from 'react';
+import { useState, useRef, useLayoutEffect, createContext, useContext } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
@@ -41,37 +41,66 @@ export function DropdownContent({
     const ref = useRef<HTMLDivElement>(null);
     const [position, setPosition] = useState({ top: 0, left: 0 });
 
-    useEffect(() => {
+    const updatePosition = () => {
+        const trigger = triggerRef.current;
+        const content = ref.current;
+        if (trigger && content && open) {
+            const rect = trigger.getBoundingClientRect();
+            const contentRect = content.getBoundingClientRect();
+
+            let left = align === 'right'
+                ? rect.right - contentRect.width
+                : rect.left;
+
+            // Prevent overflowing screen boundaries
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            if (left + contentRect.width > viewportWidth - 8) {
+                left = viewportWidth - contentRect.width - 8;
+            }
+            if (left < 8) {
+                left = 8;
+            }
+
+            let top = rect.bottom + 8;
+            // If it would overflow the bottom, show it above the trigger
+            if (top + contentRect.height > viewportHeight - 8 && rect.top > contentRect.height + 8) {
+                top = rect.top - contentRect.height - 8;
+            }
+
+            setPosition({ top, left });
+        }
+    };
+
+    useLayoutEffect(() => {
+        if (!open) return;
+
         function handleClickOutside(e: MouseEvent) {
             if (ref.current && !ref.current.contains(e.target as Node) && !triggerRef.current?.contains(e.target as Node)) {
                 onClose();
             }
         }
 
-        function updatePosition() {
-            const trigger = triggerRef.current;
-            if (trigger && open) {
-                const rect = trigger.getBoundingClientRect();
-                const offsetLeft = align === 'right' ? rect.right - 150 : rect.left;
-                
-                setPosition({
-                    top: rect.bottom + 8,
-                    left: offsetLeft
-                });
-            }
-        }
+        document.addEventListener('mousedown', handleClickOutside);
+        // Using capture: true for scroll allows us to catch scrolls in nested containers (like Dialogs)
+        window.addEventListener('scroll', updatePosition, { capture: true });
+        window.addEventListener('resize', updatePosition);
 
-        if (open) {
-            updatePosition();
-            document.addEventListener('mousedown', handleClickOutside);
-            window.addEventListener('scroll', updatePosition);
-            window.addEventListener('resize', updatePosition);
-            return () => {
-                document.removeEventListener('mousedown', handleClickOutside);
-                window.removeEventListener('scroll', updatePosition);
-                window.removeEventListener('resize', updatePosition);
-            };
-        }
+        // Track trigger movement/resizing
+        const resizeObserver = new ResizeObserver(updatePosition);
+        if (triggerRef.current) resizeObserver.observe(triggerRef.current);
+        if (ref.current) resizeObserver.observe(ref.current);
+
+        // Initial position
+        updatePosition();
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('scroll', updatePosition, { capture: true });
+            window.removeEventListener('resize', updatePosition);
+            resizeObserver.disconnect();
+        };
     }, [open, onClose, align, triggerRef]);
 
     if (!open) return null;
@@ -83,7 +112,9 @@ export function DropdownContent({
                 position: 'fixed',
                 top: `${position.top}px`,
                 left: `${position.left}px`,
-                zIndex: 9999
+                zIndex: 9999,
+                // Ensure initial render doesn't flicker before the first updatePosition
+                visibility: position.top === 0 ? 'hidden' : 'visible'
             }}
             className="rounded-md border border-gray-200 bg-white shadow-xl min-w-max"
         >
