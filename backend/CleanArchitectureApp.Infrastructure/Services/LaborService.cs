@@ -69,6 +69,7 @@ public class LaborService : ILaborService
             Id = UlidGenerator.Generate(),
             Date = dto.Date,
             LaborId = dto.LaborId,
+            SiteId = dto.SiteId,
             IsPresent = dto.IsPresent,
             IsHalfDay = dto.IsHalfDay,
             OvertimeHours = dto.OvertimeHours,
@@ -79,12 +80,23 @@ public class LaborService : ILaborService
         };
         _context.Attendances.Add(attendance);
         await _context.SaveChangesAsync();
-        return new AttendanceResponseDto(attendance.Id, attendance.Date, attendance.LaborId, attendance.Labor?.Name ?? string.Empty, attendance.IsPresent, attendance.IsHalfDay, attendance.OvertimeHours, attendance.WageForDay);
+        return new AttendanceResponseDto(attendance.Id, attendance.Date, attendance.LaborId, labor.Name, attendance.IsPresent, attendance.IsHalfDay, attendance.OvertimeHours, attendance.WageForDay);
+    }
+
+    public async Task MarkAttendanceBulkAsync(MarkAttendanceBulkDto dto, string tenantId, string userId)
+    {
+        foreach (var item in dto.Attendance)
+        {
+            await MarkAttendanceAsync(item, tenantId, userId);
+        }
     }
 
     public async Task<IEnumerable<AttendanceResponseDto>> GetAttendanceAsync(string siteId, DateTime date, string tenantId)
     {
-        var at = await _context.Attendances.Where(a => a.Date.Date == date.Date && a.TenantId == tenantId).ToListAsync();
+        var at = await _context.Attendances
+            .Include(a => a.Labor)
+            .Where(a => a.Date.Date == date.Date && a.SiteId == siteId && a.TenantId == tenantId)
+            .ToListAsync();
         return at.Select(a => new AttendanceResponseDto(a.Id, a.Date, a.LaborId, a.Labor?.Name ?? string.Empty, a.IsPresent, a.IsHalfDay, a.OvertimeHours, a.WageForDay));
     }
 

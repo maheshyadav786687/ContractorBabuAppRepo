@@ -76,6 +76,13 @@ public class LaborController : ControllerBase
         }
     }
 
+    [HttpPost("attendance/bulk")]
+    public async Task<ActionResult> MarkAttendanceBulk([FromBody] MarkAttendanceBulkDto dto)
+    {
+        await _laborService.MarkAttendanceBulkAsync(dto, GetTenantId(), GetUserId());
+        return Ok();
+    }
+
     [HttpGet("attendance/site/{siteId}")]
     public async Task<ActionResult<IEnumerable<AttendanceResponseDto>>> GetAttendance(string siteId, [FromQuery] DateTime date)
     {

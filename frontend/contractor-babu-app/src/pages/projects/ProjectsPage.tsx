@@ -340,8 +340,7 @@ export default function ProjectsPage() {
                                             <span className="text-sm font-semibold text-gray-700">Quotations</span>
                                         </div>
                                         <div className="flex items-center gap-1.5">
-                                            <span className="text-lg font-bold text-primary">{quotations.filter(q => q.projectId === project.id).length}</span>
-                                            <X className="h-3 w-3 text-primary/30 rotate-45" />
+                                            <span className="text-xs font-bold text-primary/60">{quotations.filter(q => q.projectId === project.id).length}</span>
                                         </div>
                                     </Link>
                                 </div>

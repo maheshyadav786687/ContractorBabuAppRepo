@@ -28,13 +28,19 @@ const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
     {
         icon: Users,
-        label: "Core Management",
+        label: "Security",
         children: [
             { icon: UserCog, label: "Users", path: "/users" },
             { icon: Building2, label: "Tenants", path: "/tenants" },
+        ]
+    },
+    {
+        icon: ClipboardList,
+        label: "Client & Sites",
+        children: [
             { icon: Users, label: "Clients", path: "/clients" },
             { icon: Building2, label: "Sites", path: "/sites" },
-            { icon: ShoppingCart, label: "Vendors", path: "/vendors" },
+            { icon: FileText, label: "Quotations", path: "/quotations" },
         ]
     },
     {
@@ -52,8 +58,8 @@ const menuItems = [
         children: [
             { icon: Package, label: "Items", path: "/items" },
             { icon: Package, label: "Stock", path: "/inventory" },
+            { icon: ShoppingCart, label: "Vendors", path: "/vendors" },
             { icon: FileText, label: "Purchase Orders", path: "/purchase-orders" },
-            { icon: FileText, label: "Quotations", path: "/quotations" },
         ]
     },
     {
@@ -69,7 +75,7 @@ const menuItems = [
 
 export default function Sidebar({ mobileOpen, onClose }: { mobileOpen?: boolean, onClose?: () => void }) {
     const [collapsed, setCollapsed] = useState(false)
-    const [expandedMenus, setExpandedMenus] = useState<string[]>(["Core Management", "Projects"])
+    const [expandedMenus, setExpandedMenus] = useState<string[]>(["User Management", "Projects"])
     const location = useLocation()
 
     const toggleMenu = (label: string) => {

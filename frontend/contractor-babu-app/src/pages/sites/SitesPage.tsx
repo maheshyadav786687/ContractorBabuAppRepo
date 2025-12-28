@@ -326,18 +326,18 @@ export default function SitesPage() {
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <Link to={`/projects?siteId=${site.id}`} className="flex flex-col p-2.5 rounded-lg bg-gray-50 hover:bg-primary/5 transition-colors group/link">
+                                        <Link to={`/projects?siteId=${site.id}`} className="flex flex-col p-2.5 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors group/link border border-primary/10">
                                             <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Projects</span>
                                             <div className="flex items-center justify-between">
-                                                <span className="text-lg font-bold text-gray-900 group-hover/link:text-primary">{projects.filter(p => p.siteId === site.id).length}</span>
-                                                <FolderKanban className="h-4 w-4 text-gray-300 group-hover/link:text-primary/40" />
+                                                <span className="text-sm font-bold text-primary group-hover/link:text-primary">{projects.filter(p => p.siteId === site.id).length}</span>
+                                                <FolderKanban className="h-4 w-4 text-primary" />
                                             </div>
                                         </Link>
-                                        <Link to={`/quotations?siteId=${site.id}`} className="flex flex-col p-2.5 rounded-lg bg-gray-50 hover:bg-primary/5 transition-colors group/link">
+                                        <Link to={`/quotations?siteId=${site.id}`} className="flex flex-col p-2.5 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors group/link border border-primary/10">
                                             <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Quotations</span>
                                             <div className="flex items-center justify-between">
-                                                <span className="text-lg font-bold text-gray-900 group-hover/link:text-primary">{quotations.filter(q => q.siteId === site.id).length}</span>
-                                                <FileText className="h-4 w-4 text-gray-300 group-hover/link:text-primary/40" />
+                                                <span className="text-sm font-bold text-primary group-hover/link:text-primary">{quotations.filter(q => q.siteId === site.id).length}</span>
+                                                <FileText className="h-4 w-4 text-primary" />
                                             </div>
                                         </Link>
                                     </div>

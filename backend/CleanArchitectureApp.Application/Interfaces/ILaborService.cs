@@ -12,6 +12,7 @@ public interface ILaborService
     
     // Attendance
     Task<AttendanceResponseDto> MarkAttendanceAsync(MarkAttendanceDto dto, string tenantId, string userId);
+    Task MarkAttendanceBulkAsync(MarkAttendanceBulkDto dto, string tenantId, string userId);
     Task<IEnumerable<AttendanceResponseDto>> GetAttendanceAsync(string siteId, DateTime date, string tenantId);
     
     // Payroll

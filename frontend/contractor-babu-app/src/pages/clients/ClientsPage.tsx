@@ -282,11 +282,15 @@ export default function ClientsPage() {
                                     </div>
 
                                     <div className="grid grid-cols-1">
-                                        <Link to={`/sites?clientId=${client.id}`} className="flex flex-col p-2.5 rounded-lg bg-gray-50 hover:bg-primary/5 transition-colors group/link">
-                                            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Managed Sites</span>
+                                        <Link to={`/sites?clientId=${client.id}`} className="flex items-center justify-between p-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors group/link border border-primary/10">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="p-1.5 rounded-lg bg-white shadow-sm">
+                                                    <Building2 className="h-4 w-4 text-primary" />
+                                                </div>
+                                                <span className="text-sm font-semibold text-gray-700">Managed Sites</span>
+                                            </div>
                                             <div className="flex items-center justify-between">
-                                                <span className="text-lg font-bold text-gray-900 group-hover/link:text-primary">{sites.filter(s => s.clientId === client.id).length}</span>
-                                                <Building2 className="h-4 w-4 text-gray-300 group-hover/link:text-primary/40" />
+                                                <span className="text-xs font-bold text-primary/60">{sites.filter(s => s.clientId === client.id).length}</span>
                                             </div>
                                         </Link>
                                     </div>

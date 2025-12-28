@@ -39,6 +39,7 @@ public class Attendance : TenantEntity
     public bool IsPresent { get; set; } = true;
     public bool IsHalfDay { get; set; } = false;
     public decimal OvertimeHours { get; set; } = 0;
+    public string? SiteId { get; set; }
     
     public decimal WageForDay { get; set; } // Calculated based on attendance type
     

@@ -13,6 +13,8 @@ import ProjectsPage from './pages/projects/ProjectsPage';
 import UsersPage from './pages/users/UsersPage';
 import TenantsPage from './pages/tenants/TenantsPage';
 
+import LaborPage from './pages/labor/LaborPage';
+
 function App() {
   return (
     <Router>
@@ -36,7 +38,7 @@ function App() {
           <Route path="vendors" element={<div className="text-2xl font-bold">Vendors Module - Coming Soon</div>} />
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="tasks" element={<div className="text-2xl font-bold">Tasks Module - Coming Soon</div>} />
-          <Route path="labor" element={<div className="text-2xl font-bold">Labor Module - Coming Soon</div>} />
+          <Route path="labor" element={<LaborPage />} />
           <Route path="items" element={<div className="text-2xl font-bold">Items Module - Coming Soon</div>} />
           <Route path="inventory" element={<div className="text-2xl font-bold">Inventory Module - Coming Soon</div>} />
           <Route path="purchase-orders" element={<div className="text-2xl font-bold">Purchase Orders - Coming Soon</div>} />

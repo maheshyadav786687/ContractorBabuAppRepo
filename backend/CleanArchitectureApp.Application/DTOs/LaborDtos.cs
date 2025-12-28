@@ -33,11 +33,15 @@ public record LaborResponseDto(
 
 public record MarkAttendanceDto(
     string LaborId,
-
+    string? SiteId,
     DateTime Date,
     bool IsPresent,
     bool IsHalfDay,
     decimal OvertimeHours
+);
+
+public record MarkAttendanceBulkDto(
+    List<MarkAttendanceDto> Attendance
 );
 
 public record AttendanceResponseDto(
