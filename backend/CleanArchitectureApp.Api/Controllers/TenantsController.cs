@@ -2,6 +2,8 @@ using CleanArchitectureApp.Application.DTOs;
 using CleanArchitectureApp.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
 
 namespace CleanArchitectureApp.Api.Controllers;
 
@@ -15,6 +17,11 @@ public class TenantsController : ControllerBase
     public TenantsController(ITenantService tenantService)
     {
         _tenantService = tenantService;
+    }
+
+    private string GetTenantId()
+    {
+        return User.FindFirst("TenantId")?.Value ?? "";
     }
 
     /// <summary>
@@ -34,6 +41,13 @@ public class TenantsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<TenantResponseDto>> GetById(string id)
     {
+        // Ensure user can only view their own tenant
+        var userTenantId = GetTenantId();
+        if (userTenantId != id)
+        {
+            return Forbid();
+        }
+
         var tenant = await _tenantService.GetTenantByIdAsync(id);
         if (tenant == null)
         {
@@ -41,6 +55,7 @@ public class TenantsController : ControllerBase
         }
         return Ok(tenant);
     }
+
 
     /// <summary>
     /// Create new tenant
@@ -69,6 +84,13 @@ public class TenantsController : ControllerBase
     {
         try
         {
+            // Ensure user can only update their own tenant
+            var userTenantId = GetTenantId();
+            if (userTenantId != id)
+            {
+                return Forbid();
+            }
+
             var tenant = await _tenantService.UpdateTenantAsync(id, dto);
             return Ok(tenant);
         }

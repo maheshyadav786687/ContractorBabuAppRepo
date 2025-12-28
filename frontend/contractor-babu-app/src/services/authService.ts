@@ -9,8 +9,9 @@ export interface LoginResponse {
     token: string;
     username: string;
     role: string;
-    tenantId?: number;
+    tenantId?: string;
 }
+
 
 export interface RegisterRequest {
     companyName: string;

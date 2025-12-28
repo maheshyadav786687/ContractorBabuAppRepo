@@ -21,13 +21,18 @@ public record CreateTenantDto(
 /// </summary>
 public record UpdateTenantDto(
     string CompanyName,
+    string Email,
+    string? Description,
     string? Phone,
     string? Address,
     string? City,
     string? State,
+    string? Country,
+    string? PinCode,
     string? GSTNumber,
     string? PANNumber,
-    string? Website
+    string? Website,
+    string? LogoUrl
 );
 
 /// <summary>
@@ -36,14 +41,19 @@ public record UpdateTenantDto(
 public record TenantResponseDto(
     string Id,
     string CompanyName,
+    string? Description,
     string? CompanyCode,
     string? Email,
     string? Phone,
     string? Address,
     string? City,
     string? State,
+    string? Country,
+    string? PinCode,
     string? GSTNumber,
     string? PANNumber,
+    string? Website,
+    string? LogoUrl,
     string SubscriptionPlan,
     DateTime? SubscriptionEndDate,
     bool IsActive,
@@ -52,3 +62,4 @@ public record TenantResponseDto(
     int CurrentUsers,
     int CurrentProjects
 );
+

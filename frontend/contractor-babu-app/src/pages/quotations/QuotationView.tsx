@@ -38,7 +38,7 @@ export default function QuotationView() {
         <div className="p-6">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
                 <div className="flex items-center gap-3">
-                   
+
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight text-primary flex items-center gap-2">
                             <FileText className="h-6 w-6 text-primary" />
@@ -52,21 +52,37 @@ export default function QuotationView() {
                         <ArrowLeft className="mr-2 h-4 w-4" /> Back
                     </Button>
                     <Button variant="outline" size="sm" onClick={async () => {
-                        // generate PDF by capturing the rendered view with fixed desktop width
                         try {
                             const el = document.getElementById('quotation-pdf-root');
                             if (!el) throw new Error('Quotation root not found');
 
-                            // Create a container with fixed desktop width (A4 width approximation)
                             const container = document.createElement('div');
                             container.style.position = 'fixed';
                             container.style.left = '-9999px';
                             container.style.top = '0';
-                            container.style.width = '900px'; // Full content width to ensure no wrapping
+                            container.style.width = '800px';
                             container.style.backgroundColor = 'white';
-                            container.style.padding = '20px';
+                            container.style.margin = '0';
                             container.style.boxSizing = 'border-box';
-                            container.innerHTML = el.innerHTML;
+                            // Wrap in a padded div so offsetTop and coordinates match a 24px-padded layout
+                            container.innerHTML = `<div id="content-shadow" style="padding: 24px; box-sizing: border-box; width: 800px;">${el.innerHTML}</div>`;
+
+                            const table = container.querySelector('table');
+                            if (table) {
+                                table.style.width = '100%';
+                                table.style.borderCollapse = 'collapse';
+                                table.style.tableLayout = 'fixed';
+                                table.id = 'quotation-table';
+                                // Align table margin
+                                const tableParent = table.parentElement as HTMLElement;
+                                if (tableParent) tableParent.style.marginTop = '24px';
+                            }
+                            const thead = container.querySelector('thead');
+                            if (thead) {
+                                thead.id = 'table-head';
+                                thead.style.background = 'white';
+                            }
+
                             document.body.appendChild(container);
 
                             const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
@@ -74,76 +90,94 @@ export default function QuotationView() {
                                 import('jspdf')
                             ]);
 
-                            const canvas = await html2canvas(container as HTMLElement, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-                            const imgData = canvas.toDataURL('image/png');
+
+
+                            const canvas = await html2canvas(container, {
+                                scale: 2,
+                                useCORS: true,
+                                backgroundColor: '#ffffff',
+                                logging: false,
+                                windowWidth: 800
+                            });
+
+                            // Robust header capture: Create a temporary table to keep column widths context
+                            const tableElement = container.querySelector('#quotation-table') as HTMLElement;
+                            const hTable = document.createElement('table');
+                            hTable.style.width = tableElement.offsetWidth + 'px';
+                            hTable.style.borderCollapse = 'collapse';
+                            hTable.style.tableLayout = 'fixed';
+                            const theadClone = (container.querySelector('#table-head') as HTMLElement).cloneNode(true);
+                            hTable.appendChild(theadClone);
+
+                            const hContainer = document.createElement('div');
+                            hContainer.style.position = 'fixed';
+                            hContainer.style.left = '-9999px';
+                            hContainer.style.width = tableElement.offsetWidth + 'px';
+                            hContainer.appendChild(hTable);
+                            document.body.appendChild(hContainer);
+
+                            const theadCanvas = await html2canvas(hTable, { scale: 2, backgroundColor: '#ffffff' });
+                            const theadImg = theadCanvas.toDataURL('image/png');
+                            document.body.removeChild(hContainer);
 
                             const pdf = new jsPDF('p', 'pt', 'a4');
                             const pdfWidth = pdf.internal.pageSize.getWidth();
                             const pdfHeight = pdf.internal.pageSize.getHeight();
-                            const imgWidth = pdfWidth;
-                            const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-                            let heightLeft = imgHeight;
-                            let position = 0;
-                            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                            heightLeft -= pdfHeight;
+                            const marginLeft = 40;
+                            const marginTop = 40;
+                            const marginBottom = 40;
+                            const contentWidth = pdfWidth - (marginLeft * 2);
 
-                            while (heightLeft > 0) {
-                                position = heightLeft - imgHeight;
-                                pdf.addPage();
-                                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                                heightLeft -= pdfHeight;
+                            // Use logical width (800) for mapping to prevent drifts
+                            const scale = contentWidth / 800;
+                            const imgHeightPt = (canvas.height / 2) * scale;
+
+                            const tableTopPxVal = tableElement ? tableElement.offsetTop : 0;
+                            const tableHeightPx = tableElement ? tableElement.offsetHeight : 0;
+                            const tableBottomPt = (tableTopPxVal + tableHeightPx) * scale;
+
+                            const headerHeightPt = (theadCanvas.height / 2) * scale;
+
+                            const imgData = canvas.toDataURL('image/png');
+                            let yOffset = 0;
+                            let pageNum = 1;
+
+                            while (yOffset < imgHeightPt) {
+                                if (pageNum > 1) pdf.addPage();
+
+                                let currentTopMargin = marginTop;
+                                let showHeader = false;
+
+                                if (pageNum > 1 && yOffset < tableBottomPt - 20) {
+                                    showHeader = true;
+                                    currentTopMargin += (headerHeightPt + 2); // 2pt safety gap
+                                }
+
+                                const printableHeight = pdfHeight - currentTopMargin - marginBottom;
+                                const sliceHeight = Math.min(printableHeight, imgHeightPt - yOffset);
+
+                                // Draw main content
+                                pdf.addImage(imgData, 'PNG', marginLeft, currentTopMargin - yOffset, contentWidth, imgHeightPt);
+
+                                // 2. Robust white masks with sub-pixel buffer (Draw BEFORE header)
+                                pdf.setFillColor(255, 255, 255);
+                                pdf.rect(0, 0, pdfWidth, currentTopMargin + 0.5, 'F');
+                                pdf.rect(0, currentTopMargin + sliceHeight - 0.5, pdfWidth, pdfHeight - (currentTopMargin + sliceHeight) + 1, 'F');
+
+                                if (showHeader) {
+                                    pdf.addImage(theadImg, 'PNG', marginLeft, marginTop, contentWidth, headerHeightPt);
+                                }
+
+                                yOffset += sliceHeight;
+                                pageNum++;
                             }
 
-                            pdf.save(`${quotation.quotationNumber || 'quotation'}.pdf`);
+                            pdf.save(`${quotation.quotationNumber}.pdf`);
                             document.body.removeChild(container);
                         } catch (err) {
                             console.error('PDF generation failed', err);
-                            // fallback: open printable HTML in new tab with full desktop layout
-                            try {
-                                const itemsHtml = quotation.items.map((it: any, idx: number) => `
-                                    <tr>
-                                        <td style="padding:8px;border:1px solid #ddd;text-align:center">${idx + 1}</td>
-                                        <td style="padding:8px;border:1px solid #ddd">${it.description || ''}</td>
-                                        <td style="padding:8px;border:1px solid #ddd;text-align:center">${it.isWithMaterial ? 'Yes' : 'No'}</td>
-                                        <td style="padding:8px;border:1px solid #ddd">${(it.length ?? '-') + ' × ' + (it.width ?? '-') + ' × ' + (it.height ?? '-')}</td>
-                                        <td style="padding:8px;border:1px solid #ddd;text-align:center">${it.area ?? '-'}</td>
-                                        <td style="padding:8px;border:1px solid #ddd;text-align:center">${it.quantity ?? ''}</td>
-                                        <td style="padding:8px;border:1px solid #ddd;text-align:center">${it.unit ?? ''}</td>
-                                        <td style="padding:8px;border:1px solid #ddd;text-align:right">${it.rate?.toLocaleString?.() ?? it.rate ?? ''}</td>
-                                        <td style="padding:8px;border:1px solid #ddd;text-align:right">${(it.amount ?? 0).toLocaleString()}</td>
-                                    </tr>
-                                `).join('');
-
-                                const taxAmount = (total * (quotation.taxPercentage || 0)) / 100;
-                                const discountAmount = (total * (quotation.discountPercentage || 0)) / 100;
-                                const grandTotal = total + taxAmount - discountAmount;
-
-                                const html = `<!doctype html><html><head><meta charset="utf-8"><title>Quotation - ${quotation.quotationNumber}</title><style>body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin: 0; padding: 20px; color: #111; } table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid #ddd; padding: 8px; } th { background: #f5f5f5; font-weight: bold; } td { text-align: left; } td.right { text-align: right; } .totals { margin-top: 20px; margin-left: auto; max-width: 400px; } .total-row { display: flex; justify-content: space-between; padding: 8px 0; } .total-row.grand { border-top: 2px solid #111; font-weight: bold; font-size: 16px; }</style></head><body>` +
-                                    `<div style="display: flex; justify-content: space-between; margin-bottom: 20px;"><div><div style="font-size: 20px; font-weight: bold;">ConstructPro Inc.</div><div style="font-size: 12px; color: #666;">123 Construction Ave, Metropolis</div></div><div style="text-align: right;"><div style="font-size: 20px; font-weight: bold;">Quotation</div><div style="font-size: 12px; margin-top: 4px;">#${quotation.quotationNumber}</div></div></div>` +
-                                    `<hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">` +
-                                    `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;"><div><div style="font-weight: bold; margin-bottom: 8px;">Quote to</div><div style="font-size: 14px; font-weight: bold;">${quotation.clientName || '-'}</div><div style="font-size: 12px; color: #666; margin-top: 4px;">${quotation.clientAddress || ''}</div><div style="font-size: 12px; color: #666;">${quotation.clientEmail || ''}</div><div style="font-size: 12px; color: #666;">${quotation.clientPhone || ''}</div></div><div style="text-align: right;"><div style="font-weight: bold; margin-bottom: 8px;">Details</div><div style="font-size: 12px; color: #666;">Date: <span style="font-weight: bold;">${new Date(quotation.quotationDate).toLocaleDateString()}</span></div><div style="margin-top: 8px; font-size: 12px; color: #666;">Status: <span style="padding: 2px 8px; border-radius: 4px; background: ${quotation.status?.toLowerCase() === 'approved' ? '#dcfce7' : '#f3f4f6'}; color: ${quotation.status?.toLowerCase() === 'approved' ? '#15803d' : '#374151'};">${quotation.status || '—'}</span></div><div style="margin-top: 8px; font-size: 12px; color: #666;">Project: <span style="font-weight: bold;">${quotation.projectName || '-'}</span></div></div></div>` +
-                                    `<table style="margin-top: 20px;"><thead><tr><th style="width: 40px; text-align: center;">#</th><th>Description</th><th>Dimensions</th><th style="text-align: center;">Incl. Material</th><th style="text-align: center;">Area</th><th style="text-align: center;">Qty</th><th style="text-align: center;">Unit</th><th style="text-align: right; width: 100px;">Rate</th><th style="text-align: right; width: 120px;">Amount</th></tr></thead><tbody>` +
-                                    itemsHtml +
-                                    `</tbody></table>` +
-                                    `<div class="totals"><div class="total-row"><span>Subtotal</span><span>₹${total.toLocaleString()}</span></div><div class="total-row"><span>Tax (${quotation.taxPercentage || 0}%)</span><span>₹${taxAmount.toFixed(2)}</span></div><div class="total-row"><span>Discount (${quotation.discountPercentage || 0}%)</span><span style="color: #dc2626;">- ₹${discountAmount.toFixed(2)}</span></div><div class="total-row grand"><span>Grand Total</span><span>₹${grandTotal.toLocaleString()}</span></div></div>` +
-                                    `<div style="margin-top: 20px; font-size: 12px; color: #666;"><div style="font-weight: bold; font-size: 10px; margin-bottom: 8px; text-transform: uppercase;">Notes</div><div>${quotation.remarks || 'This quotation is valid for 30 days.'}</div></div>` +
-                                    `</body></html>`;
-
-                                const w = window.open('', '_blank', 'noopener,noreferrer');
-                                if (w) {
-                                    w.document.open();
-                                    w.document.write(html);
-                                    w.document.close();
-                                    w.focus();
-                                    setTimeout(() => w.print(), 500);
-                                } else {
-                                    alert('Popup blocked. Please allow popups for this site to download/save PDF.');
-                                }
-                            } catch (err2) {
-                                console.error('Final fallback failed', err2);
-                                alert('Failed to generate or open PDF.');
-                            }
+                            window.print();
                         }
                     }}>
                         <Download className="mr-2 h-4 w-4" />
@@ -188,18 +222,18 @@ export default function QuotationView() {
                     </div>
 
                     <div className="overflow-x-auto mt-6">
-                        <table className="w-full text-sm ">
+                        <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
                             <thead>
                                 <tr className="text-left text-xs text-gray-500 border-b">
                                     <th className="py-3 w-[40px]">#</th>
-                                    <th className="py-3">Description</th>
-                                    <th className="py-3">Incl. Material</th>
-                                    <th className="py-3">Dimensions</th>
-                                    <th className="py-3">Area</th>
-                                    <th className="py-3">Qty</th>
-                                    <th className="py-3">Unit</th>
-                                    <th className="py-3 text-right">Rate</th>
-                                    <th className="py-3 text-right">Amount</th>
+                                    <th className="py-3 w-[180px]">Description</th>
+                                    <th className="py-3 w-[70px]">Incl. Material</th>
+                                    <th className="py-3 w-[110px]">Dimensions</th>
+                                    <th className="py-3 w-[60px]">Area</th>
+                                    <th className="py-3 w-[40px]">Qty</th>
+                                    <th className="py-3 w-[50px]">Unit</th>
+                                    <th className="py-3 text-right w-[80px]">Rate</th>
+                                    <th className="py-3 text-right w-[90px]">Amount</th>
                                 </tr>
                             </thead>
                             <tbody>

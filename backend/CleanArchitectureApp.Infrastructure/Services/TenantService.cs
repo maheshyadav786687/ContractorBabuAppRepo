@@ -84,13 +84,18 @@ public class TenantService : ITenantService
         }
 
         tenant.CompanyName = dto.CompanyName;
+        tenant.Email = dto.Email;
+        tenant.Description = dto.Description;
         tenant.Phone = dto.Phone;
         tenant.Address = dto.Address;
         tenant.City = dto.City;
         tenant.State = dto.State;
+        tenant.Country = dto.Country;
+        tenant.PinCode = dto.PinCode;
         tenant.GSTNumber = dto.GSTNumber;
         tenant.PANNumber = dto.PANNumber;
         tenant.Website = dto.Website;
+        tenant.LogoUrl = dto.LogoUrl;
         tenant.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -116,14 +121,19 @@ public class TenantService : ITenantService
         return new TenantResponseDto(
             tenant.Id,
             tenant.CompanyName,
+            tenant.Description,
             tenant.CompanyCode,
             tenant.Email,
             tenant.Phone,
             tenant.Address,
             tenant.City,
             tenant.State,
+            tenant.Country,
+            tenant.PinCode,
             tenant.GSTNumber,
             tenant.PANNumber,
+            tenant.Website,
+            tenant.LogoUrl,
             tenant.SubscriptionPlan,
             tenant.SubscriptionEndDate,
             tenant.IsActive,

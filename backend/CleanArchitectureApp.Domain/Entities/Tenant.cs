@@ -8,7 +8,9 @@ public class Tenant
 {
     public string Id { get; set; } = string.Empty;
     public required string CompanyName { get; set; }
+    public string? Description { get; set; }
     public string? CompanyCode { get; set; } // Unique identifier
+
     public string? GSTNumber { get; set; }
     public string? PANNumber { get; set; }
     public string? Address { get; set; }
@@ -19,6 +21,8 @@ public class Tenant
     public string? Phone { get; set; }
     public string? Email { get; set; }
     public string? Website { get; set; }
+    public string? LogoUrl { get; set; }
+
     
     // Subscription details
     public string SubscriptionPlan { get; set; } = "Free"; // Free, Basic, Premium, Enterprise

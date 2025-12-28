@@ -1,10 +1,6 @@
 import { useState, useEffect } from "react"
-import { Building2, Mail, Phone, MapPin, Globe, Loader2, AlertCircle, Save, Edit, Info, ShieldCheck } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Building2, Mail, Phone, MapPin, Globe, Loader2, AlertCircle, Edit, ShieldCheck, BadgeCheck, Save, X, Activity, Users, FolderKanban, CheckCircle2 } from "lucide-react"
+import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui"
 import { authService } from "@/services/authService"
 import { tenantService } from "@/services/tenantService"
 import type { Tenant, UpdateTenantDto } from "@/types/tenant"
@@ -29,6 +25,7 @@ export default function TenantsPage() {
             const currentUser = authService.getCurrentUser()
             if (!currentUser?.tenantId) {
                 setError("No tenant associated with your account.")
+                setLoading(false)
                 return
             }
             const data = await tenantService.getTenant(currentUser.tenantId)
@@ -45,14 +42,19 @@ export default function TenantsPage() {
     const handleOpenEdit = () => {
         if (!tenant) return
         setFormData({
-            name: tenant.name,
+            companyName: tenant.companyName,
             description: tenant.description,
             email: tenant.email,
             phone: tenant.phone,
             address: tenant.address,
+            city: tenant.city,
+            state: tenant.state,
+            country: tenant.country,
+            pinCode: tenant.pinCode,
             gstNumber: tenant.gstNumber,
             panNumber: tenant.panNumber,
             website: tenant.website,
+            logoUrl: tenant.logoUrl,
         })
         setIsDialogOpen(true)
     }
@@ -62,19 +64,23 @@ export default function TenantsPage() {
         if (!tenant) return
         setSubmitting(true)
         try {
-            // Clean payload: remove empty strings/nulls to avoid backend validation errors
-            const payload = Object.fromEntries(
-                Object.entries(formData).filter(([_, v]) => v !== null && v !== undefined && v !== "")
-            );
+            const payload = {
+                ...formData,
+                email: formData.email || "",
+                website: formData.website || "",
+                description: formData.description || "",
+                gstNumber: formData.gstNumber || "",
+                panNumber: formData.panNumber || "",
+                logoUrl: formData.logoUrl || "",
+                country: formData.country || ""
+            };
 
-            console.log("[TenantsPage] Updating tenant with payload:", payload);
-            await tenantService.updateTenant(tenant.id, payload)
+            await tenantService.updateTenant(tenant.id, payload as UpdateTenantDto)
             await loadTenant()
             setIsDialogOpen(false)
         } catch (err: any) {
             console.error("Failed to update tenant:", err)
-            console.error("Error response:", err.response?.data)
-            alert(err.response?.data?.message || err.message || "Failed to update organization details")
+            alert(err.response?.data?.message || "Failed to update organization details")
         } finally {
             setSubmitting(false)
         }
@@ -90,232 +96,338 @@ export default function TenantsPage() {
 
     if (error || !tenant) {
         return (
-            <div className="flex h-[50vh] flex-col items-center justify-center gap-4 text-center p-6">
+            <div className="flex h-[50vh] flex-col items-center justify-center gap-4 text-center">
                 <div className="rounded-full bg-red-100 p-3">
                     <AlertCircle className="h-8 w-8 text-red-600" />
                 </div>
                 <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-gray-900 font-outfit">Organization Load Failed</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Something went wrong</h3>
                     <p className="text-gray-500 max-w-sm">{error || "Could not find tenant information."}</p>
                 </div>
+                <Button variant="outline" onClick={loadTenant}>
+                    Try Refreshing
+                </Button>
             </div>
         )
     }
 
     return (
-        <div className="p-6 max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900 font-outfit">Organization Settings</h1>
-                    <p className="text-gray-500 mt-1">Manage your company profile and business details</p>
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-center gap-2">
+                    <div className="grid gap-1">
+                        <h1 className="text-2xl font-bold tracking-tight text-primary flex items-center gap-2">
+                            <Building2 className="h-6 w-6 text-primary" />
+                            Tenant Profile
+                        </h1>
+                        <p className="text-gray-500">Manage your organization's core information and subscription</p>
+                    </div>
                 </div>
-                <Button onClick={handleOpenEdit} className="h-11 px-6 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all gap-2">
-                    <Edit className="h-4 w-4" />
+                <Button onClick={handleOpenEdit}>
+                    <Edit className="mr-2 h-4 w-4" />
                     Update Profile
                 </Button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column: Brand Card */}
-                <Card className="lg:col-span-1 border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                    <CardContent className="p-0">
-                        <div className="bg-gradient-to-br from-primary/80 to-primary p-8 text-center">
-                            <div className="h-24 w-24 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 mx-auto flex items-center justify-center shadow-xl mb-4">
-                                <Building2 className="h-12 w-12 text-white" />
-                            </div>
-                            <h2 className="text-xl font-bold text-white mb-1">{tenant.name}</h2>
-                            <p className="text-white/80 text-sm line-clamp-1">{tenant.website || 'No website listed'}</p>
+            {/* Stats Grid - Matches Dashboard Style */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <Card className="border border-gray-100 shadow-sm">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-xs font-bold text-gray-500 uppercase tracking-wider">Subscribed Plan</CardTitle>
+                        <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center">
+                            <CheckCircle2 className="h-4 w-4 text-blue-600" />
                         </div>
-                        <div className="p-6 space-y-6">
-                            <div className="flex items-center justify-between text-sm py-2 border-b border-gray-50">
-                                <span className="text-gray-500 font-medium">Status</span>
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 uppercase tracking-wider">
-                                    Active Account
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between text-sm py-2 border-b border-gray-50">
-                                <span className="text-gray-500 font-medium">Member Since</span>
-                                <span className="text-gray-900 font-semibold">{new Date(tenant.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</span>
-                            </div>
-                            <div className="p-4 rounded-xl bg-blue-50/50 border border-blue-100 space-y-2">
-                                <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest">
-                                    <ShieldCheck className="h-3.5 w-3.5" />
-                                    Account Verification
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-gray-900">{tenant.subscriptionPlan}</div>
+                    </CardContent>
+                </Card>
+
+                <Card className="border border-gray-100 shadow-sm">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-xs font-bold text-gray-500 uppercase tracking-wider">Users Usage</CardTitle>
+                        <div className="h-8 w-8 rounded-full bg-indigo-50 flex items-center justify-center">
+                            <Users className="h-4 w-4 text-indigo-600" />
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-gray-900">{tenant.currentUsers} / {tenant.maxUsers}</div>
+                    </CardContent>
+                </Card>
+
+                <Card className="border border-gray-100 shadow-sm">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-xs font-bold text-gray-500 uppercase tracking-wider">Active Sites</CardTitle>
+                        <div className="h-8 w-8 rounded-full bg-emerald-50 flex items-center justify-center">
+                            <FolderKanban className="h-4 w-4 text-emerald-600" />
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-gray-900">{tenant.currentProjects} / {tenant.maxProjects}</div>
+                    </CardContent>
+                </Card>
+
+                <Card className="border border-gray-100 shadow-sm">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-xs font-bold text-gray-500 uppercase tracking-wider">Status</CardTitle>
+                        <div className="h-8 w-8 rounded-full bg-green-50 flex items-center justify-center">
+                            <Activity className="h-4 w-4 text-green-600" />
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-green-600">Active</div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-3">
+                {/* Profile Details Card - Matches standard content cards */}
+                <Card className="lg:col-span-2 border border-gray-100 shadow-sm">
+                    <CardHeader className="border-b bg-gray-50/30">
+                        <CardTitle className="text-lg font-semibold text-gray-800">Organization Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                        <div className="flex flex-col md:flex-row gap-8">
+                            {/* Logo */}
+                            <div className="flex-shrink-0 flex flex-col items-center justify-center">
+                                <div className="h-32 w-32 rounded-2xl bg-gray-50 border border-dashed border-gray-200 p-2 flex items-center justify-center overflow-hidden">
+                                    {tenant.logoUrl ? (
+                                        <img src={tenant.logoUrl} alt={tenant.companyName} className="h-full w-full object-contain" />
+                                    ) : (
+                                        <Building2 className="h-12 w-12 text-gray-300" />
+                                    )}
                                 </div>
-                                <p className="text-xs text-blue-600/80 leading-relaxed">Your organization is currently verified for commercial use in ConstructPro.</p>
+                                <span className="text-[10px] font-mono text-gray-400 mt-2 uppercase tracking-tighter">Code: {tenant.companyCode}</span>
+                            </div>
+
+                            {/* Details List */}
+                            <div className="flex-1 space-y-6">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-gray-900">{tenant.companyName}</h2>
+                                    <p className="text-sm text-gray-600 mt-1 italic">{tenant.description || "No description provided."}</p>
+                                </div>
+
+                                <div className="grid gap-4 md:grid-cols-2 text-sm">
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-3 text-gray-600">
+                                            <Mail className="h-4 w-4 text-primary/70" />
+                                            <span>{tenant.email}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 text-gray-600">
+                                            <Phone className="h-4 w-4 text-primary/70" />
+                                            <span>{tenant.phone || "No phone added"}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <Globe className="h-4 w-4 text-primary/70" />
+                                            {tenant.website ? (
+                                                <a href={tenant.website.startsWith('http') ? tenant.website : `https://${tenant.website}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+                                                    {tenant.website.replace(/^https?:\/\//, '')}
+                                                </a>
+                                            ) : (
+                                                <span className="text-gray-400">No website</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-3 text-gray-600">
+                                        <MapPin className="h-4 w-4 text-primary/70 mt-1" />
+                                        <div className="space-y-0.5">
+                                            <p className="text-gray-900 font-medium">{tenant.address}</p>
+                                            <p className="text-xs uppercase tracking-tight">
+                                                {tenant.city}, {tenant.state} {tenant.pinCode}
+                                                <br />
+                                                {tenant.country || "India"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                {/* Right Column: Detailed Info Grid */}
-                <div className="lg:col-span-2 space-y-6">
-                    {/* Public Profile */}
-                    <Card className="border-gray-200 shadow-sm">
-                        <div className="p-6 border-b border-gray-100 flex items-center gap-2">
-                            <Building2 className="h-5 w-5 text-primary" />
-                            <h3 className="font-bold text-gray-900 font-outfit uppercase tracking-wider text-sm">Business Identity</h3>
+                {/* Tax / Compliance Card */}
+                <Card className="border border-gray-100 shadow-sm">
+                    <CardHeader className="border-b bg-gray-50/30">
+                        <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                            <ShieldCheck className="h-5 w-5 text-primary" />
+                            Compliance
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                        <div className="space-y-6">
+                            <div className="p-3 rounded-lg bg-gray-50 border border-gray-100">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">GST Identification</span>
+                                <p className="font-mono text-sm font-bold text-gray-900">{tenant.gstNumber || "NOT REGISTERED"}</p>
+                            </div>
+                            <div className="p-3 rounded-lg bg-gray-50 border border-gray-100">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">PAN Number</span>
+                                <p className="font-mono text-sm font-bold text-gray-900">{tenant.panNumber || "NOT REGISTERED"}</p>
+                            </div>
+                            <div className="pt-2 flex items-center gap-2 text-xs text-green-600 font-bold bg-green-50/50 p-2 rounded-md">
+                                <BadgeCheck className="h-4 w-4" />
+                                Verification Status: Verified
+                            </div>
                         </div>
-                        <CardContent className="p-6 grid gap-8 md:grid-cols-2">
-                            <div className="md:col-span-2 space-y-2">
-                                <Label className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Description</Label>
-                                <p className="text-gray-700 leading-relaxed italic">
-                                    {tenant.description || "No description provided for your organization."}
-                                </p>
-                            </div>
-                            <div className="space-y-1.5">
-                                <div className="flex items-center gap-2 text-gray-400">
-                                    <Mail className="h-4 w-4" />
-                                    <span className="text-[10px] font-bold uppercase tracking-widest leading-none mt-0.5">Contact Email</span>
-                                </div>
-                                <p className="text-gray-900 font-semibold pl-6">{tenant.email}</p>
-                            </div>
-                            <div className="space-y-1.5">
-                                <div className="flex items-center gap-2 text-gray-400">
-                                    <Phone className="h-4 w-4" />
-                                    <span className="text-[10px] font-bold uppercase tracking-widest leading-none mt-0.5">Contact Phone</span>
-                                </div>
-                                <p className="text-gray-900 font-semibold pl-6">{tenant.phone}</p>
-                            </div>
-                            <div className="space-y-1.5">
-                                <div className="flex items-center gap-2 text-gray-400">
-                                    <Globe className="h-4 w-4" />
-                                    <span className="text-[10px] font-bold uppercase tracking-widest leading-none mt-0.5">Website</span>
-                                </div>
-                                <p className="text-gray-900 font-semibold pl-6">{tenant.website || 'N/A'}</p>
-                            </div>
-                            <div className="space-y-1.5">
-                                <div className="flex items-center gap-2 text-gray-400">
-                                    <MapPin className="h-4 w-4" />
-                                    <span className="text-[10px] font-bold uppercase tracking-widest leading-none mt-0.5">Address</span>
-                                </div>
-                                <p className="text-gray-900 font-semibold pl-6 break-words">{tenant.address}</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Tax & Legal */}
-                    <Card className="border-gray-200 shadow-sm">
-                        <div className="p-6 border-b border-gray-100 flex items-center gap-2">
-                            <Info className="h-5 w-5 text-primary" />
-                            <h3 className="font-bold text-gray-900 font-outfit uppercase tracking-wider text-sm">Legal Information</h3>
-                        </div>
-                        <CardContent className="p-6 grid gap-6 md:grid-cols-2">
-                            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 group hover:border-primary/20 transition-colors">
-                                <Label className="text-gray-400 text-[10px] font-bold uppercase tracking-widest block mb-1">GST Number</Label>
-                                <span className="font-mono text-lg font-bold text-gray-900 group-hover:text-primary transition-colors">{tenant.gstNumber || 'NOT PROVIDED'}</span>
-                            </div>
-                            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 group hover:border-primary/20 transition-colors">
-                                <Label className="text-gray-400 text-[10px] font-bold uppercase tracking-widest block mb-1">PAN Number</Label>
-                                <span className="font-mono text-lg font-bold text-gray-900 group-hover:text-primary transition-colors">{tenant.panNumber || 'NOT PROVIDED'}</span>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
 
-            {/* Edit Dialog */}
+            {/* KEEP UPDATE MODAL POPUP UI AS IT IS */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="max-w-2xl font-outfit">
+                <DialogContent className="w-full sm:max-w-[1100px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl font-bold flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                                <Edit className="h-5 w-5" />
-                            </div>
-                            Update Organization Profile
+                        <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                            <Edit className="h-6 w-6" />
+                            Edit Tenant
                         </DialogTitle>
                     </DialogHeader>
-                    <form onSubmit={handleSubmit} className="space-y-6 mt-4">
-                        <div className="grid grid-cols-2 gap-6">
-                            <div className="col-span-2 space-y-2">
-                                <Label htmlFor="name">Company Name</Label>
+
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="companyName">Company Name *</Label>
                                 <Input
-                                    id="name"
+                                    id="companyName"
+                                    value={formData.companyName}
+                                    onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                                     required
-                                    value={formData.name || ""}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                />
-                            </div>
-                            <div className="col-span-2 space-y-2">
-                                <Label htmlFor="description">Description</Label>
-                                <Input
-                                    id="description"
-                                    value={formData.description || ""}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="email">Public Email</Label>
+                                <Label htmlFor="logoUrl">Logo URL</Label>
+                                <Input
+                                    id="logoUrl"
+                                    placeholder="https://..."
+                                    value={formData.logoUrl}
+                                    onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="description">Business Description</Label>
+                            <Input
+                                id="description"
+                                placeholder="Brief description of your business"
+                                value={formData.description}
+                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="email">Email *</Label>
                                 <Input
                                     id="email"
                                     type="email"
-                                    required
-                                    value={formData.email || ""}
+                                    value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    required
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="phone">Contact Phone</Label>
+                                <Label htmlFor="phone">Phone *</Label>
                                 <Input
                                     id="phone"
-                                    required
-                                    value={formData.phone || ""}
+                                    value={formData.phone}
                                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                    required
                                 />
                             </div>
-                            <div className="col-span-2 space-y-2">
-                                <Label htmlFor="address">Address</Label>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="website">Website</Label>
+                            <Input
+                                id="website"
+                                placeholder="www.example.com"
+                                value={formData.website}
+                                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="address">Address *</Label>
+                            <Input
+                                id="address"
+                                value={formData.address}
+                                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                required
+                            />
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="city">City</Label>
                                 <Input
-                                    id="address"
-                                    required
-                                    value={formData.address || ""}
-                                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                    id="city"
+                                    value={formData.city}
+                                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="website">Website URL</Label>
+                                <Label htmlFor="state">State</Label>
                                 <Input
-                                    id="website"
-                                    value={formData.website || ""}
-                                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                                    placeholder="https://example.com"
+                                    id="state"
+                                    value={formData.state}
+                                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                                 />
                             </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="pinCode">PIN Code</Label>
+                                <Input
+                                    id="pinCode"
+                                    value={formData.pinCode}
+                                    onChange={(e) => setFormData({ ...formData, pinCode: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="country">Country</Label>
+                                <Input
+                                    id="country"
+                                    value={formData.country}
+                                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-2">
                             <div className="space-y-2">
                                 <Label htmlFor="gstNumber">GST Number</Label>
                                 <Input
                                     id="gstNumber"
-                                    value={formData.gstNumber || ""}
-                                    onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value })}
+                                    className="uppercase"
+                                    value={formData.gstNumber}
+                                    onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value.toUpperCase() })}
                                 />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="panNumber">PAN Number</Label>
                                 <Input
                                     id="panNumber"
-                                    value={formData.panNumber || ""}
-                                    onChange={(e) => setFormData({ ...formData, panNumber: e.target.value })}
+                                    className="uppercase"
+                                    value={formData.panNumber}
+                                    onChange={(e) => setFormData({ ...formData, panNumber: e.target.value.toUpperCase() })}
                                 />
                             </div>
                         </div>
 
-                        <DialogFooter className="pt-6 border-t font-sans">
+                        <DialogFooter className="gap-2 sm:gap-0">
                             <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={submitting}>
+                                <X className="mr-2 h-4 w-4" />
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={submitting} className="min-w-[140px] gap-2">
+                            <Button
+                                type="submit"
+                                disabled={submitting}
+                            >
                                 {submitting ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        Saving...
-                                    </>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 ) : (
-                                    <>
-                                        <Save className="h-4 w-4" />
-                                        Save Changes
-                                    </>
+                                    <Save className="mr-2 h-4 w-4" />
                                 )}
+                                Update
                             </Button>
                         </DialogFooter>
                     </form>
