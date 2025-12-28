@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { FileText, ArrowLeft, Download, Loader2 } from 'lucide-react';
 
+import { downloadQuotationPdf } from '@/lib/pdfUtils';
+
 export default function QuotationView() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -53,128 +55,7 @@ export default function QuotationView() {
                     </Button>
                     <Button variant="outline" size="sm" onClick={async () => {
                         try {
-                            const el = document.getElementById('quotation-pdf-root');
-                            if (!el) throw new Error('Quotation root not found');
-
-                            const container = document.createElement('div');
-                            container.style.position = 'fixed';
-                            container.style.left = '-9999px';
-                            container.style.top = '0';
-                            container.style.width = '800px';
-                            container.style.backgroundColor = 'white';
-                            container.style.margin = '0';
-                            container.style.boxSizing = 'border-box';
-                            // Wrap in a padded div so offsetTop and coordinates match a 24px-padded layout
-                            container.innerHTML = `<div id="content-shadow" style="padding: 24px; box-sizing: border-box; width: 800px;">${el.innerHTML}</div>`;
-
-                            const table = container.querySelector('table');
-                            if (table) {
-                                table.style.width = '100%';
-                                table.style.borderCollapse = 'collapse';
-                                table.style.tableLayout = 'fixed';
-                                table.id = 'quotation-table';
-                                // Align table margin
-                                const tableParent = table.parentElement as HTMLElement;
-                                if (tableParent) tableParent.style.marginTop = '24px';
-                            }
-                            const thead = container.querySelector('thead');
-                            if (thead) {
-                                thead.id = 'table-head';
-                                thead.style.background = 'white';
-                            }
-
-                            document.body.appendChild(container);
-
-                            const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
-                                import('html2canvas'),
-                                import('jspdf')
-                            ]);
-
-
-
-                            const canvas = await html2canvas(container, {
-                                scale: 2,
-                                useCORS: true,
-                                backgroundColor: '#ffffff',
-                                logging: false,
-                                windowWidth: 800
-                            });
-
-                            // Robust header capture: Create a temporary table to keep column widths context
-                            const tableElement = container.querySelector('#quotation-table') as HTMLElement;
-                            const hTable = document.createElement('table');
-                            hTable.style.width = tableElement.offsetWidth + 'px';
-                            hTable.style.borderCollapse = 'collapse';
-                            hTable.style.tableLayout = 'fixed';
-                            const theadClone = (container.querySelector('#table-head') as HTMLElement).cloneNode(true);
-                            hTable.appendChild(theadClone);
-
-                            const hContainer = document.createElement('div');
-                            hContainer.style.position = 'fixed';
-                            hContainer.style.left = '-9999px';
-                            hContainer.style.width = tableElement.offsetWidth + 'px';
-                            hContainer.appendChild(hTable);
-                            document.body.appendChild(hContainer);
-
-                            const theadCanvas = await html2canvas(hTable, { scale: 2, backgroundColor: '#ffffff' });
-                            const theadImg = theadCanvas.toDataURL('image/png');
-                            document.body.removeChild(hContainer);
-
-                            const pdf = new jsPDF('p', 'pt', 'a4');
-                            const pdfWidth = pdf.internal.pageSize.getWidth();
-                            const pdfHeight = pdf.internal.pageSize.getHeight();
-
-                            const marginLeft = 40;
-                            const marginTop = 40;
-                            const marginBottom = 40;
-                            const contentWidth = pdfWidth - (marginLeft * 2);
-
-                            // Use logical width (800) for mapping to prevent drifts
-                            const scale = contentWidth / 800;
-                            const imgHeightPt = (canvas.height / 2) * scale;
-
-                            const tableTopPxVal = tableElement ? tableElement.offsetTop : 0;
-                            const tableHeightPx = tableElement ? tableElement.offsetHeight : 0;
-                            const tableBottomPt = (tableTopPxVal + tableHeightPx) * scale;
-
-                            const headerHeightPt = (theadCanvas.height / 2) * scale;
-
-                            const imgData = canvas.toDataURL('image/png');
-                            let yOffset = 0;
-                            let pageNum = 1;
-
-                            while (yOffset < imgHeightPt) {
-                                if (pageNum > 1) pdf.addPage();
-
-                                let currentTopMargin = marginTop;
-                                let showHeader = false;
-
-                                if (pageNum > 1 && yOffset < tableBottomPt - 20) {
-                                    showHeader = true;
-                                    currentTopMargin += (headerHeightPt + 2); // 2pt safety gap
-                                }
-
-                                const printableHeight = pdfHeight - currentTopMargin - marginBottom;
-                                const sliceHeight = Math.min(printableHeight, imgHeightPt - yOffset);
-
-                                // Draw main content
-                                pdf.addImage(imgData, 'PNG', marginLeft, currentTopMargin - yOffset, contentWidth, imgHeightPt);
-
-                                // 2. Robust white masks with sub-pixel buffer (Draw BEFORE header)
-                                pdf.setFillColor(255, 255, 255);
-                                pdf.rect(0, 0, pdfWidth, currentTopMargin + 0.5, 'F');
-                                pdf.rect(0, currentTopMargin + sliceHeight - 0.5, pdfWidth, pdfHeight - (currentTopMargin + sliceHeight) + 1, 'F');
-
-                                if (showHeader) {
-                                    pdf.addImage(theadImg, 'PNG', marginLeft, marginTop, contentWidth, headerHeightPt);
-                                }
-
-                                yOffset += sliceHeight;
-                                pageNum++;
-                            }
-
-                            pdf.save(`${quotation.quotationNumber}.pdf`);
-                            document.body.removeChild(container);
+                            await downloadQuotationPdf(quotation);
                         } catch (err) {
                             console.error('PDF generation failed', err);
                             window.print();
