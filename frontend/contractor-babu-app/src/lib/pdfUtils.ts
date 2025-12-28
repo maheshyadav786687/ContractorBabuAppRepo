@@ -1,13 +1,26 @@
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import type { Quotation } from '@/types/quotation';
+import type { Tenant } from '@/types/tenant';
 
-export const downloadQuotationPdf = async (quotation: Quotation) => {
+export const downloadQuotationPdf = async (quotation: Quotation, tenant?: Tenant | null) => {
     try {
         const total = (quotation.items || []).reduce((sum, item) => sum + (item.amount || 0), 0);
         const taxAmount = (total * (quotation.taxPercentage || 0)) / 100;
         const discountAmount = (total * (quotation.discountPercentage || 0)) / 100;
         const grandTotal = total + taxAmount - discountAmount;
+
+        const companyName = tenant?.companyName || 'ConstructPro Inc.';
+        const fullAddress = tenant ? [
+            tenant.address,
+            tenant.city,
+            tenant.state,
+            tenant.pinCode ? ` - ${tenant.pinCode}` : ''
+        ].filter(Boolean).join(', ').replace(',  -', ' -') : '123 Construction Ave, Metropolis';
+        const companyAddress = fullAddress;
+        const companyContact = (tenant?.phone || tenant?.email) ? `<div style="font-size: 14px; color: #6b7280; margin-top: 2px;">${[tenant?.phone, tenant?.email].filter(Boolean).join(' | ')}</div>` : '';
+        const companyWebsite = tenant?.website ? `<div style="font-size: 14px; color: #6b7280; margin-top: 2px;">${tenant.website}</div>` : '';
+        const companyGst = tenant?.gstNumber ? `<div style="font-size: 12px; color: #6b7280; margin-top: 2px;">GST: ${tenant.gstNumber}</div>` : '';
 
         const itemsHtml = (quotation.items || []).map((it: any, idx: number) => `
             <tr style="border-bottom: 1px solid #e5e7eb;">
@@ -28,8 +41,11 @@ export const downloadQuotationPdf = async (quotation: Quotation) => {
                 <!-- Header -->
                 <div id="section-header" style="display: flex; justify-content: space-between; align-items: flex-start; padding-top: 12px;">
                     <div>
-                        <div style="font-size: 24px; font-weight: 600; line-height: 1.2;">ConstructPro Inc.</div>
-                        <div style="font-size: 14px; color: #6b7280; margin-top: 4px;">123 Construction Ave, Metropolis</div>
+                        <div style="font-size: 24px; font-weight: 600; line-height: 1.2;">${companyName}</div>
+                        <div style="font-size: 14px; color: #6b7280; margin-top: 4px;">${companyAddress}</div>
+                        ${companyContact}
+                        ${companyWebsite}
+                        ${companyGst}
                     </div>
                     <div style="text-align: right;">
                         <div style="font-size: 24px; font-weight: 600; letter-spacing: 0.1em; line-height: 1.2;">Quotation</div>
@@ -228,6 +244,11 @@ export const downloadQuotationPdf = async (quotation: Quotation) => {
             if (showHeader) {
                 pdf.addImage(theadImg, 'PNG', marginLeft, marginTop, contentWidth, headerHeightPt);
             }
+
+            // 3. Add Page Numbers
+            pdf.setFontSize(10);
+            pdf.setTextColor(150);
+            pdf.text(`Page ${pageNum}`, pdfWidth - marginLeft, pdfHeight - marginBottom + 20, { align: 'right' });
 
             yOffset += sliceHeight;
             pageNum++;

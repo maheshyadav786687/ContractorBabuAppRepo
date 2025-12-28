@@ -18,12 +18,16 @@ import { DropdownMenu, DropdownTrigger, DropdownContent, DropdownItem } from '@/
 import { Plus, Search, Edit, Trash2, FileText, Calendar, IndianRupee, Grid3x3, List, Loader2, Eye, MoreVertical, Download, ChevronDown, X, Save, FolderKanban } from 'lucide-react';
 import QuotationItemsEditor from '@/components/quotations/QuotationItemsEditor';
 import { downloadQuotationPdf } from '@/lib/pdfUtils';
+import { authService } from '@/services/authService';
+import { tenantService } from '@/services/tenantService';
+import type { Tenant } from '@/types/tenant';
 
 export default function QuotationsPage() {
     const [quotations, setQuotations] = useState<Quotation[]>([]);
     const [projects, setProjects] = useState<Project[]>([]);
     const [sites, setSites] = useState<Site[]>([]);
     const [clients, setClients] = useState<any[]>([]);
+    const [tenant, setTenant] = useState<Tenant | null>(null);
     const [isSiteDropdownOpen, setIsSiteDropdownOpen] = useState(false);
     const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -80,16 +84,22 @@ export default function QuotationsPage() {
     const loadData = async () => {
         try {
             setLoading(true);
-            const [quotationsData, projectsData, sitesData, clientsData] = await Promise.all([
+            const [quotationsData, projectsData, sitesData, clientsData, currentUser] = await Promise.all([
                 quotationService.getAll(),
                 projectService.getAll(),
                 siteService.getAll(),
-                clientService.getAll()
+                clientService.getAll(),
+                authService.getCurrentUser()
             ]);
             setQuotations(quotationsData);
             setProjects(projectsData);
             setSites(sitesData as Site[]);
             setClients(clientsData || []);
+
+            if (currentUser?.tenantId) {
+                const t = await tenantService.getTenant(currentUser.tenantId);
+                setTenant(t);
+            }
         } catch (err) {
             console.error('Failed to load data:', err);
         } finally {
@@ -299,7 +309,7 @@ export default function QuotationsPage() {
                 ...quotation,
                 ...details
             };
-            await downloadQuotationPdf(populatedQuotation);
+            await downloadQuotationPdf(populatedQuotation, tenant);
         } catch (err) {
             console.error('PDF generation failed', err);
             window.open(`/quotations/${quotation.id}`, '_blank');

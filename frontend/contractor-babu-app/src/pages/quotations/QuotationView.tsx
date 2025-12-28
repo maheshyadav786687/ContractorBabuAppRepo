@@ -5,13 +5,16 @@ import type { Quotation } from '@/types/quotation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { FileText, ArrowLeft, Download, Loader2 } from 'lucide-react';
-
+import { authService } from '@/services/authService';
+import { tenantService } from '@/services/tenantService';
+import type { Tenant } from '@/types/tenant';
 import { downloadQuotationPdf } from '@/lib/pdfUtils';
 
 export default function QuotationView() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [quotation, setQuotation] = useState<Quotation | null>(null);
+    const [tenant, setTenant] = useState<Tenant | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -19,10 +22,18 @@ export default function QuotationView() {
         const load = async () => {
             try {
                 setLoading(true);
-                const q = await quotationService.getById(id);
+                const [q, currentUser] = await Promise.all([
+                    quotationService.getById(id),
+                    authService.getCurrentUser()
+                ]);
                 setQuotation(q);
+
+                if (currentUser?.tenantId) {
+                    const t = await tenantService.getTenant(currentUser.tenantId);
+                    setTenant(t);
+                }
             } catch (err) {
-                console.error('Failed to load quotation', err);
+                console.error('Failed to load data', err);
             } finally {
                 setLoading(false);
             }
@@ -55,7 +66,7 @@ export default function QuotationView() {
                     </Button>
                     <Button variant="outline" size="sm" onClick={async () => {
                         try {
-                            await downloadQuotationPdf(quotation);
+                            await downloadQuotationPdf(quotation, tenant);
                         } catch (err) {
                             console.error('PDF generation failed', err);
                             window.print();
@@ -72,8 +83,28 @@ export default function QuotationView() {
                     {/* Header: company left, QUOTATION title right */}
                     <div className="flex items-start justify-between pt-3">
                         <div>
-                            <div className="text-2xl font-semibold">ConstructPro Inc.</div>
-                            <div className="text-sm text-gray-500">123 Construction Ave, Metropolis</div>
+                            <div className="text-2xl font-semibold">{tenant?.companyName || 'ConstructPro Inc.'}</div>
+                            <div className="text-sm text-gray-500">
+                                {tenant ? (
+                                    <>
+                                        {[tenant.address, tenant.city, tenant.state].filter(Boolean).join(', ')}
+                                        {tenant.pinCode && ` - ${tenant.pinCode}`}
+                                    </>
+                                ) : (
+                                    '123 Construction Ave, Metropolis'
+                                )}
+                            </div>
+                            {(tenant?.phone || tenant?.email) && (
+                                <div className="text-sm text-gray-500 mt-0.5">
+                                    {[tenant?.phone, tenant?.email].filter(Boolean).join(' | ')}
+                                </div>
+                            )}
+                            {tenant?.website && (
+                                <div className="text-sm text-gray-500 mt-0.5">{tenant.website}</div>
+                            )}
+                            {tenant?.gstNumber && (
+                                <div className="text-xs text-gray-400 mt-1">GST: {tenant.gstNumber}</div>
+                            )}
                         </div>
 
                         <div className="text-right">
